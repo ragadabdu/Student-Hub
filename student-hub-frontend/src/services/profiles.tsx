@@ -105,12 +105,9 @@ const mockProfiles: Profile[] = [
 
 // Service interface - this will be replaced with real API calls
 export const profilesService = {
-  // Get profiles for discovery (exclude current user)
+  // Get profiles for discovery
   getDiscoveryProfiles: async (userId?: string): Promise<Profile[]> => {
-    // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // If userId provided, filter them out
     if (userId) {
       return mockProfiles.filter(p => p.id !== userId);
     }
@@ -123,52 +120,44 @@ export const profilesService = {
     return mockProfiles.find(p => p.id === id) || null;
   },
 
-  // Like a profile (will connect to POST /api/v1/likes)
+  // Like a profile
   likeProfile: async (profileId: string): Promise<{ success: boolean; matched?: boolean }> => {
     await new Promise(resolve => setTimeout(resolve, 400));
-    // Simulate match 30% of the time for demo
     const matched = Math.random() < 0.3;
+    console.log(`User liked profile ${profileId}`);
     return { success: true, matched };
   },
 
-  // Pass on a profile (will connect to DELETE /api/v1/likes/:id)
+  // Pass on a profile
   passProfile: async (profileId: string): Promise<{ success: boolean }> => {
     await new Promise(resolve => setTimeout(resolve, 300));
+    console.log(`User passed on profile ${profileId}`);
     return { success: true };
   },
 
   // Super like a profile
   superLikeProfile: async (profileId: string): Promise<{ success: boolean; matched?: boolean }> => {
     await new Promise(resolve => setTimeout(resolve, 400));
-    // Higher match rate for super likes
     const matched = Math.random() < 0.6;
+    console.log(`User super liked profile ${profileId}`);
     return { success: true, matched };
   },
 
-  // Update profile (will connect to PATCH /api/v1/profiles/:id)
+  // Update profile
   updateProfile: async (profileId: string, updates: Partial<Profile>): Promise<Profile> => {
     await new Promise(resolve => setTimeout(resolve, 600));
-  
-    // Find and update the profile in mock data
     const index = mockProfiles.findIndex(p => p.id === profileId);
     if (index === -1) {
       throw new Error('Profile not found');
     }
-  
-    const updatedProfile = {
-      ...mockProfiles[index],
-      ...updates,
-    };
+    const updatedProfile = { ...mockProfiles[index], ...updates };
     mockProfiles[index] = updatedProfile;
-  
     return updatedProfile;
   },
 
-  // Get current user's profile (will connect to GET /api/v1/profiles/me)
+  // Get current user's profile
   getCurrentUserProfile: async (): Promise<Profile> => {
     await new Promise(resolve => setTimeout(resolve, 300));
-    // Return the first profile as the current user for demo
     return mockProfiles[0];
   },
-
 };

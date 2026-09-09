@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-type BadgeVariant = 'primary' | 'green' | 'pink' | 'yellow' | 'gray';
+type BadgeVariant = 'primary' | 'green' | 'pink' | 'yellow' | 'gray' | 'blue';
 
 interface BadgeProps {
   children: ReactNode;
@@ -14,6 +14,7 @@ export function Badge({ children, variant = 'gray' }: BadgeProps) {
     pink: 'bg-pink-100 text-pink-700',
     yellow: 'bg-yellow-100 text-yellow-700',
     gray: 'bg-gray-100 text-gray-700',
+    blue: 'bg-blue-100 text-blue-700',
   };
 
   return (
