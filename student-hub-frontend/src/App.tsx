@@ -17,7 +17,7 @@ function App() {
           {/* Desktop Sidebar */}
           <Sidebar />
           
-          {/* Main Content */}
+          {/* Main Content Area */}
           <div className="flex-1 flex flex-col min-w-0">
             <main className="flex-1 overflow-y-auto pb-20 lg:pb-0">
               <Routes>
@@ -31,7 +31,7 @@ function App() {
             </main>
           </div>
 
-          {/* Mobile Bottom Nav */}
+          {/* Mobile Bottom Navigation */}
           <MobileNav />
         </div>
       </AuthProvider>

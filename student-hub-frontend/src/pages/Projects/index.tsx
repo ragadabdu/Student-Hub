@@ -4,7 +4,7 @@ import { ProjectFilters } from '../../components/projects/ProjectFilters/Project
 import { LoadingState } from '../../components/ui/LoadingState/LoadingState';
 import { EmptyState } from '../../components/ui/EmptyState/EmptyState';
 import { Button } from '../../components/ui/Button/Button';
-import { AlertCircle, Plus, Layers } from 'lucide-react';
+import { AlertCircle, Plus } from 'lucide-react';
 
 export default function Projects() {
   const {

@@ -7,7 +7,7 @@ import { ProfileEditForm } from '../../components/profile/ProfileEditForm/Profil
 import { LoadingState } from '../../components/ui/LoadingState/LoadingState';
 import { EmptyState } from '../../components/ui/EmptyState/EmptyState';
 import { Button } from '../../components/ui/Button/Button';
-import { AlertCircle, CheckCircle, Layers, Link2, User } from 'lucide-react';
+import { AlertCircle, CheckCircle, Layers } from 'lucide-react';
 import type { ProjectPreview } from '../../types/user';
 
 export default function Profile() {

@@ -3,9 +3,7 @@ import {
   RotateCcw, 
   X, 
   Heart, 
-  Sparkles,
-  ChevronLeft,
-  ChevronRight
+  Sparkles
 } from 'lucide-react';
 
 interface SwipeActionsProps {

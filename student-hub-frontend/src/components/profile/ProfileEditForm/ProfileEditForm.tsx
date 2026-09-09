@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import type { FormEvent } from 'react';
 import type { Profile, LookingFor } from '../../../types/user';
 import { Button } from '../../ui/Button/Button';
@@ -21,8 +21,6 @@ export function ProfileEditForm({ profile, onSave, onCancel, isSaving }: Profile
     interests: profile.interests.join(', '),
     lookingFor: profile.lookingFor as string[],
   });
-
-  const [newInterest, setNewInterest] = useState('');
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();

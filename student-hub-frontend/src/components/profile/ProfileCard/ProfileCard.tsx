@@ -1,7 +1,7 @@
 import type { Profile } from '../../../types/user';
 import { Avatar } from '../../ui/Avatar/Avatar';
 import { Badge } from '../../ui/Badge/Badge';
-import { Users, Book, Briefcase, Coffee, Sparkles } from 'lucide-react';
+import { Users, Briefcase, Coffee, Sparkles } from 'lucide-react';
 
 interface ProfileCardProps {
   profile: Profile;
