@@ -22,6 +22,22 @@ export default {
         'text-secondary': '#64748b',
         border: '#e2e8f0',
       },
+
+      animation: {
+        'in': 'fade-in 0.2s ease-out',
+        'in-reverse': 'fade-in 0.2s ease-out reverse',
+        'zoom-in-95': 'zoom-in-95 0.3s ease-out',
+      },
+      keyframes: {
+        'fade-in': {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        'zoom-in-95': {
+          '0%': { opacity: '0', transform: 'scale(0.95)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+      },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
