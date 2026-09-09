@@ -1,6 +1,5 @@
 import type { Conversation } from '../../../types/message';
 import { Avatar } from '../../ui/Avatar/Avatar';
-import { MessageCircle } from 'lucide-react';
 
 interface ConversationListProps {
   conversations: Conversation[];

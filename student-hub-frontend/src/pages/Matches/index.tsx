@@ -12,7 +12,6 @@ export default function Matches() {
     isLoading,
     error,
     selectedMatchId,
-    isSendingMessage,
     loadMatches,
     selectMatch,
     clearSelectedMatch,

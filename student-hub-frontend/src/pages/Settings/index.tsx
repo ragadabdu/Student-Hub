@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useSettings } from '../../hooks/useSettings';
 import { LoadingState } from '../../components/ui/LoadingState/LoadingState';
 import { Button } from '../../components/ui/Button/Button';
-import { AlertCircle, CheckCircle, Moon, Sun, Monitor, Globe, MapPin, Eye, Bell, Mail, Users, RefreshCw, Shield } from 'lucide-react';
+import { AlertCircle, CheckCircle, Moon, Sun, Monitor, Globe, Eye, Bell, Mail, Users, RefreshCw, Shield } from 'lucide-react';
 
 export default function Settings() {
   const {

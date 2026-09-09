@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { Conversation, Message } from '../types/message';
+import type { Conversation} from '../types/message';
 import { messagesService } from '../services/messages';
 
 export function useMessages() {

@@ -206,7 +206,7 @@ describe('Settings Page', () => {
   });
 
   it('should change discovery radius', async () => {
-    const user = userEvent.setup();
+    
     vi.mocked(settingsService.getSettings).mockResolvedValue(mockSettings);
     vi.mocked(settingsService.updateSettings).mockResolvedValue({
       ...mockSettings,

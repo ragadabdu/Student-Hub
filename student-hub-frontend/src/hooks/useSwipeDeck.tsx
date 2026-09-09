@@ -101,8 +101,6 @@ export function useSwipeDeck() {
   // Undo last action
   const undoLastAction = useCallback(async () => {
     if (actionHistory.length === 0 || currentIndex === 0) return;
-
-    const lastAction = actionHistory[actionHistory.length - 1];
     
     // Remove the action from history
     setActionHistory(prev => prev.slice(0, -1));

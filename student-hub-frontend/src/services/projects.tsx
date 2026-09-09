@@ -1,5 +1,4 @@
 import type { Project, ProjectCategory } from '../types/project';
-import type { Profile } from '../types/user';
 
 // Mock project data
 const mockProjects: Project[] = [

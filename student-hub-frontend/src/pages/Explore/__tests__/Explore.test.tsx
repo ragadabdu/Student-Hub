@@ -1,9 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import Explore from '../index';
-import { profilesService } from '../../../services/profiles';
 import type { Profile } from '../../../types/user';
 
 // Mock the profiles service
@@ -93,7 +92,7 @@ describe('Explore Page Integration', () => {
   it('should render empty state when no profiles', () => {
     vi.mocked(useSwipeDeck).mockReturnValue({
       ...mockSwipeDeckReturn,
-      currentProfile: null,
+      currentProfile: undefined as unknown as Profile,
       hasMoreProfiles: false,
       remainingProfiles: 0,
     });

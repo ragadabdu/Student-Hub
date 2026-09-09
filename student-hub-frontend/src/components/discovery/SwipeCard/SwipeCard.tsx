@@ -40,7 +40,7 @@ export function SwipeCard({ children, onSwipeLeft, onSwipeRight, className = '' 
     }
   };
 
-  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+  const handlePointerUp = () => {
     isDragging.current = false;
     startX.current = null;
     pointerId.current = null;
