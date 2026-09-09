@@ -144,4 +144,31 @@ export const profilesService = {
     const matched = Math.random() < 0.6;
     return { success: true, matched };
   },
+
+  // Update profile (will connect to PATCH /api/v1/profiles/:id)
+  updateProfile: async (profileId: string, updates: Partial<Profile>): Promise<Profile> => {
+    await new Promise(resolve => setTimeout(resolve, 600));
+  
+    // Find and update the profile in mock data
+    const index = mockProfiles.findIndex(p => p.id === profileId);
+    if (index === -1) {
+      throw new Error('Profile not found');
+    }
+  
+    const updatedProfile = {
+      ...mockProfiles[index],
+      ...updates,
+    };
+    mockProfiles[index] = updatedProfile;
+  
+    return updatedProfile;
+  },
+
+  // Get current user's profile (will connect to GET /api/v1/profiles/me)
+  getCurrentUserProfile: async (): Promise<Profile> => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    // Return the first profile as the current user for demo
+    return mockProfiles[0];
+  },
+
 };
