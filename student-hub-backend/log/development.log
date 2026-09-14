@@ -538,3 +538,61 @@ Using vips to process variants requires the libvips library. Please install libv
   [1m[36mActiveRecord::SchemaMigration Load (1.6ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='Backend'*/[0m
 Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
   [1m[35m (42.0ms)[0m  [1m[34mSELECT version() /*application='Backend'*/[0m
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Started POST "/api/v1/auth/register" for 127.0.0.1 at 2026-09-10 16:14:22 +0300
+  [1m[36mActiveRecord::SchemaMigration Load (2.9ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='Backend'*/[0m
+  
+ActionController::RoutingError (No route matches [POST] "/api/v1/auth/register"):
+  
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+  [1m[35m (183.9ms)[0m  [1m[34mSELECT version() /*application='Backend'*/[0m
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+[ActionDispatch::HostAuthorization::DefaultResponseApp] Blocked hosts: www.example.com
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Started POST "/api/v1/auth/register" for ::1 at 2026-09-11 13:28:02 +0300
+  [1m[36mActiveRecord::SchemaMigration Load (2.3ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='Backend'*/[0m
+Processing by Api::V1::Auth::RegistrationsController#create as */*
+  Parameters: {"user" => {"email" => "[FILTERED]", "password" => "[FILTERED]", "password_confirmation" => "[FILTERED]"}, "registration" => {"user" => {"email" => "[FILTERED]", "password" => "[FILTERED]", "password_confirmation" => "[FILTERED]"}}}
+  [1m[36mTRANSACTION (0.8ms)[0m  [1m[35mBEGIN /*action='create',application='Backend',controller='registrations'*/[0m
+  ↳ app/controllers/api/v1/auth/registrations_controller.rb:24:in 'Api::V1::Auth::RegistrationsController#create'
+  [1m[36mUser Exists? (11.8ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE "users"."email" = 'curl-test@example.com' LIMIT 1 /*action='create',application='Backend',controller='registrations'*/[0m
+  ↳ app/controllers/api/v1/auth/registrations_controller.rb:24:in 'Api::V1::Auth::RegistrationsController#create'
+  [1m[36mUser Create (1.9ms)[0m  [1m[32mINSERT INTO "users" ("created_at", "current_sign_in_at", "current_sign_in_ip", "email", "encrypted_password", "last_sign_in_at", "last_sign_in_ip", "remember_created_at", "reset_password_sent_at", "reset_password_token", "sign_in_count", "updated_at") VALUES ('2026-09-11 10:28:02.702783', NULL, NULL, 'curl-test@example.com', '$2a$12$Stq7Xb.0PGNQq9IGCBQSW.AJSvQSPoJUqW80cvnCqNvwI3XYPt2tq', NULL, NULL, NULL, NULL, NULL, 0, '2026-09-11 10:28:02.702783') RETURNING "id" /*action='create',application='Backend',controller='registrations'*/[0m
+  ↳ app/controllers/api/v1/auth/registrations_controller.rb:24:in 'Api::V1::Auth::RegistrationsController#create'
+  [1m[36mProfile Create (3.8ms)[0m  [1m[32mINSERT INTO "profiles" ("bio", "birthdate", "created_at", "looking_for", "major", "name", "profile_visibility", "show_on_explore", "tagline", "university", "updated_at", "user_id") VALUES (NULL, NULL, '2026-09-11 10:28:02.733388', 0, NULL, NULL, 0, TRUE, NULL, NULL, '2026-09-11 10:28:02.733388', '8e18890b-0905-48a0-9f5a-01aa368e30fe') RETURNING "id" /*action='create',application='Backend',controller='registrations'*/[0m
+  ↳ app/models/user.rb:56:in 'User#create_default_profile'
+  [1m[36mProfile Load (1.7ms)[0m  [1m[34mSELECT "profiles".* FROM "profiles" WHERE "profiles"."user_id" = '8e18890b-0905-48a0-9f5a-01aa368e30fe' LIMIT 1 /*action='create',application='Backend',controller='registrations'*/[0m
+  ↳ app/models/user.rb:56:in 'User#create_default_profile'
+  [1m[36mTRANSACTION (2.1ms)[0m  [1m[35mCOMMIT /*action='create',application='Backend',controller='registrations'*/[0m
+  ↳ app/controllers/api/v1/auth/registrations_controller.rb:24:in 'Api::V1::Auth::RegistrationsController#create'
+rescue_from handled RuntimeError (Could not find a valid mapping for #<User id: "8e18890b-0905-48a0-9f5a-01aa368e30fe", created_at: "2026-09-11 10:28:02.702783000 +0000", email: [FILTERED], updated_at: "2026-09-11 10:28:02.702783000 +0000">) - /home/user/.local/share/mise/installs/ruby/3.4.9/lib/ruby/gems/3.4.0/gems/devise-4.9.4/lib/devise/mapping.rb:46:in 'Devise::Mapping.find_scope!'
+Completed 500 Internal Server Error in 463ms (Views: 0.3ms | ActiveRecord: 72.3ms (4 queries, 0 cached) | GC: 0.0ms)
+
+
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.

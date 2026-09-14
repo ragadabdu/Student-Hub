@@ -1,16 +1,23 @@
-Rails.application.routes.draw do
-  # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
+# frozen_string_literal: true
 
-  # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
-  # Can be used by load balancers and uptime monitors to verify that the app is live.
+Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
+
+  # Register Devise's :user mapping. We skip all route groups
+  # because we expose our own /api/v1/auth/* endpoints.
+  devise_for :users, skip: [:sessions, :registrations, :passwords,
+                            :confirmations, :unlocks]
 
   namespace :api do
     namespace :v1 do
       get "health", to: "health#show"
+
+      namespace :auth do
+        post   "register", to: "registrations#create"
+        post   "login",    to: "sessions#create"
+        delete "logout",   to: "sessions#destroy"
+        get    "me",       to: "sessions#show"
+      end
     end
   end
-
-  # Defines the root path route ("/")
-  # root "posts#index"
 end

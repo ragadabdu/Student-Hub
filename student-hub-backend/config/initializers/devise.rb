@@ -1,13 +1,6 @@
 # frozen_string_literal: true
 
 # Devise configuration for Student Hub.
-#
-# Key architectural choices reflected here:
-#   - Sessions are cookie-based (not JWT).
-#   - Cookies are HttpOnly, Secure in production, SameSite=Lax.
-#   - CSRF protection is enabled for state-changing requests.
-#   - We use Devise modules: database_authenticatable, registerable,
-#     recoverable, rememberable, trackable, validatable.
 
 Devise.setup do |config|
   # ==> Mailer
@@ -24,7 +17,6 @@ Devise.setup do |config|
   config.skip_session_storage = [:http_auth]
 
   # Password hashing cost (bcrypt).
-  # Lower cost in test so specs are fast.
   config.stretches = Rails.env.test? ? 1 : 12
 
   # Reconfirm on email change — disable for MVP.
@@ -33,13 +25,32 @@ Devise.setup do |config|
   # Time window for password reset.
   config.reset_password_within = 6.hours
 
-  # Sign out via DELETE request (we expose it as an API action).
+  # Sign out via DELETE request.
   config.sign_out_via = :delete
 
-  # ==> Navigation
   # API-only: do not attempt HTML redirects on auth failure.
   config.navigational_formats = []
+end
 
-  # ==> Hotwire / Turbo (not used, API only)
-  # Leave defaults.
+# Ensure the User mapping is registered even though we don't use
+# devise_for in routes.
+#
+# This is necessary because Devise's `sign_in`/`sign_out` helpers
+# rely on the mapping being registered in Devise.mappings, and our
+# custom routes bypass the normal devise_for route generation.
+#
+# We add the mapping AFTER Devise.setup so that the Warden middleware
+# (which is configured during Devise.setup) can find it. The
+# `to_prepare` hook ensures the mapping is registered after all models
+# are loaded.
+Rails.application.config.to_prepare do
+  unless Devise.mappings[:user]
+    Devise.add_mapping(:user, {
+      class_name:   "User",
+      router_name:  :main_app,
+      path:         "users",
+      path_names:   { sign_in: "sign_in", sign_out: "sign_out", sign_up: "sign_up" },
+      skip:         :all
+    })
+  end
 end
