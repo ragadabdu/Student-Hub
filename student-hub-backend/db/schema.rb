@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_16_210928) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_16_215538) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -51,6 +51,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_16_210928) do
     t.index ["user_id"], name: "index_profiles_on_user_id", unique: true
   end
 
+  create_table "project_skills", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.uuid "project_id", null: false
+    t.uuid "skill_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["project_id", "skill_id"], name: "index_project_skills_on_project_and_skill", unique: true
+    t.index ["project_id"], name: "index_project_skills_on_project_id"
+    t.index ["skill_id"], name: "index_project_skills_on_skill_id"
+  end
+
   create_table "projects", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.integer "category", default: 0, null: false
     t.datetime "created_at", null: false
@@ -64,7 +74,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_16_210928) do
     t.uuid "user_id", null: false
     t.index ["category"], name: "index_projects_on_category"
     t.index ["created_at"], name: "index_projects_on_created_at"
+    t.index ["looking_for"], name: "index_projects_on_looking_for"
     t.index ["user_id"], name: "index_projects_on_user_id"
+    t.check_constraint "team_size IS NULL OR team_size > 0 AND team_size <= 100", name: "projects_team_size_range"
   end
 
   create_table "skills", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -115,6 +127,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_16_210928) do
 
   add_foreign_key "portfolio_links", "users"
   add_foreign_key "profiles", "users"
+  add_foreign_key "project_skills", "projects"
+  add_foreign_key "project_skills", "skills"
   add_foreign_key "projects", "users"
   add_foreign_key "user_interests", "interests"
   add_foreign_key "user_interests", "users"
