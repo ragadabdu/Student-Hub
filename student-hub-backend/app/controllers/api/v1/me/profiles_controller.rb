@@ -16,32 +16,51 @@ module Api
         end
 
         # PATCH /api/v1/me/profile
+        #
+        # Accepts:
+        #   { "user": { "name": "Alice" }, "profile": { "bio": "...", ... } }
+        #
+        # Name is a User attribute; other fields are Profile attributes.
+        # Both are updated atomically in a transaction.
         def update
           profile = current_user.profile
 
-          if profile.update(profile_params)
-            serialized = ActiveModelSerializers::SerializableResource.new(
-              profile,
-              serializer: ProfileSerializer,
-              include_portfolio_links: true
-            ).as_json
-
-            render json: { profile: serialized }
-          else
-            render_error(
-              code:    "VALIDATION_ERROR",
-              message: "Profile could not be updated",
-              details: profile.errors.to_hash,
-              status:  :unprocessable_content
-            )
+          ActiveRecord::Base.transaction do
+            if user_params.present?
+              current_user.update!(user_params)
+            end
+            if profile_params.present?
+              profile.update!(profile_params)
+            end
           end
+
+          serialized = ActiveModelSerializers::SerializableResource.new(
+            profile.reload,
+            serializer: ProfileSerializer,
+            include_portfolio_links: true
+          ).as_json
+
+          render json: { profile: serialized }
+        rescue ActiveRecord::RecordInvalid => e
+          record = e.record
+          render_error(
+            code:    "VALIDATION_ERROR",
+            message: "Profile could not be updated",
+            details: record.errors.to_hash,
+            status:  :unprocessable_content
+          )
         end
 
         private
 
+        def user_params
+          return {} unless params[:user].present?
+          params.require(:user).permit(:name)
+        end
+
         def profile_params
+          return {} unless params[:profile].present?
           params.require(:profile).permit(
-            :name,
             :birthdate,
             :university,
             :major,

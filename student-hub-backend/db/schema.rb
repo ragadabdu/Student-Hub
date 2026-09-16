@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_10_080518) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_16_210928) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -40,7 +40,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_10_080518) do
     t.datetime "created_at", null: false
     t.integer "looking_for", default: 0, null: false
     t.string "major"
-    t.string "name"
     t.integer "profile_visibility", default: 0, null: false
     t.boolean "show_on_explore", default: true, null: false
     t.string "tagline"
@@ -104,6 +103,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_10_080518) do
     t.string "encrypted_password", default: "", null: false
     t.datetime "last_sign_in_at"
     t.inet "last_sign_in_ip"
+    t.string "name", limit: 100
     t.datetime "remember_created_at"
     t.datetime "reset_password_sent_at"
     t.string "reset_password_token"

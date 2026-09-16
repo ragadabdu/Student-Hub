@@ -4,19 +4,6 @@ class User < ApplicationRecord
   # ------------------------------------------------------------------
   # Devise
   # ------------------------------------------------------------------
-  # Included modules:
-  #   database_authenticatable  - email/password auth
-  #   registerable              - sign up
-  #   recoverable               - password reset
-  #   rememberable              - "remember me" cookie
-  #   trackable                 - sign-in count/IP/timestamps
-  #   validatable               - email format + password length
-  #
-  # Explicitly excluded:
-  #   confirmable  - would require email delivery, out of scope for MVP
-  #   lockable     - we will use Rack::Attack for brute-force protection
-  #   timeoutable  - cookie expiration handles session timeout
-  #   omniauthable - not using third-party login
   devise :database_authenticatable,
          :registerable,
          :recoverable,
@@ -40,14 +27,14 @@ class User < ApplicationRecord
   # ------------------------------------------------------------------
   # Validations
   # ------------------------------------------------------------------
-  # Devise's :validatable already covers email format + password length.
-  # We add anything app-specific here.
+  # `name` is a user identity attribute (not a profile one) so that
+  # endpoints which need "the user's name" (e.g., project owner, message
+  # sender) can access it without loading the profile.
+  validates :name, length: { maximum: 100 }, allow_blank: true
 
   # ------------------------------------------------------------------
   # Callbacks
   # ------------------------------------------------------------------
-  # Every user gets a Profile automatically. This keeps the API simple:
-  # the frontend never has to create one explicitly.
   after_create :create_default_profile
 
   private

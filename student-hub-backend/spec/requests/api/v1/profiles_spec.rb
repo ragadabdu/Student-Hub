@@ -29,51 +29,48 @@ RSpec.describe "Profiles API", type: :request do
 
       it "returns other users' public profiles" do
         other = create(:user, email: "other@example.com")
-        other.profile.update!(name: "Other Student", university: "MIT")
+        other.update!(name: "Other Student")
+        other.profile.update!(university: "MIT")
 
         get "/api/v1/profiles", as: :json
 
         body = JSON.parse(response.body)
         expect(body["profiles"].length).to eq(1)
-        expect(body["profiles"].first["name"]).to eq("Other Student")
+        expect(body["profiles"].first.dig("user", "name")).to eq("Other Student")
         expect(body["profiles"].first["university"]).to eq("MIT")
       end
 
       it "excludes the current user's own profile" do
-        viewer.profile.update!(name: "Viewer Name")
+        viewer.update!(name: "Viewer Name")
 
         get "/api/v1/profiles", as: :json
 
         body = JSON.parse(response.body)
-        names = body["profiles"].map { |p| p["name"] }
+        names = body["profiles"].map { |p| p.dig("user", "name") }
         expect(names).not_to include("Viewer Name")
       end
 
       it "excludes private profiles" do
         other = create(:user, email: "private@example.com")
-        other.profile.update!(
-          name: "Private User",
-          profile_visibility: :private_profile
-        )
+        other.update!(name: "Private User")
+        other.profile.update!(profile_visibility: :private_profile)
 
         get "/api/v1/profiles", as: :json
 
         body = JSON.parse(response.body)
-        names = body["profiles"].map { |p| p["name"] }
+        names = body["profiles"].map { |p| p.dig("user", "name") }
         expect(names).not_to include("Private User")
       end
 
       it "excludes profiles with show_on_explore = false" do
         other = create(:user, email: "hidden@example.com")
-        other.profile.update!(
-          name: "Hidden User",
-          show_on_explore: false
-        )
+        other.update!(name: "Hidden User")
+        other.profile.update!(show_on_explore: false)
 
         get "/api/v1/profiles", as: :json
 
         body = JSON.parse(response.body)
-        names = body["profiles"].map { |p| p["name"] }
+        names = body["profiles"].map { |p| p.dig("user", "name") }
         expect(names).not_to include("Hidden User")
       end
 
@@ -148,9 +145,9 @@ RSpec.describe "Profiles API", type: :request do
     context "when authenticated" do
       before { sign_in(viewer) }
 
-            it "returns the profile with all details" do
+      it "returns the profile with all details" do
+        other.update!(name: "Detailed User")
         other.profile.update!(
-          name:       "Detailed User",
           university: "Stanford",
           major:      "AI",
           tagline:    "Building things",
@@ -169,7 +166,7 @@ RSpec.describe "Profiles API", type: :request do
 
         expect(response).to have_http_status(:ok)
         body = JSON.parse(response.body)["profile"]
-        expect(body["name"]).to eq("Detailed User")
+        expect(body.dig("user", "name")).to eq("Detailed User")
         expect(body["university"]).to eq("Stanford")
         expect(body["age"]).to eq(22)
         expect(body["interests"].map { |i| i["name"] }).to include("Robotics")

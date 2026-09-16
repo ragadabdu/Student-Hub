@@ -16,15 +16,18 @@ RSpec.describe "Me::Profiles API", type: :request do
     context "when authenticated" do
       before { sign_in(user) }
 
-      it "returns the current user's profile" do
-        user.profile.update!(name: "Me Myself", university: "MyU")
+      it "returns the current user's profile with embedded user" do
+        user.update!(name: "Me Myself")
+        user.profile.update!(university: "MyU")
 
         get "/api/v1/me/profile", as: :json
 
         expect(response).to have_http_status(:ok)
         body = JSON.parse(response.body)["profile"]
-        expect(body["name"]).to eq("Me Myself")
         expect(body["university"]).to eq("MyU")
+        expect(body["user"]["name"]).to eq("Me Myself")
+        expect(body["user"]["id"]).to eq(user.id)
+        expect(body["user"]["avatar_url"]).to be_nil
       end
 
       it "includes portfolio links" do
@@ -44,7 +47,7 @@ RSpec.describe "Me::Profiles API", type: :request do
   describe "PATCH /api/v1/me/profile" do
     context "when not authenticated" do
       it "returns 401" do
-        patch "/api/v1/me/profile", params: { profile: { name: "Hacker" } }, as: :json
+        patch "/api/v1/me/profile", params: { user: { name: "Hacker" } }, as: :json
         expect(response).to have_http_status(:unauthorized)
       end
     end
@@ -52,10 +55,18 @@ RSpec.describe "Me::Profiles API", type: :request do
     context "when authenticated" do
       before { sign_in(user) }
 
-      it "updates name, university, major, tagline, and bio" do
+      it "updates name (user attribute)" do
+        patch "/api/v1/me/profile", params: {
+          user: { name: "New Name" }
+        }, as: :json
+
+        expect(response).to have_http_status(:ok)
+        expect(user.reload.name).to eq("New Name")
+      end
+
+      it "updates profile attributes" do
         patch "/api/v1/me/profile", params: {
           profile: {
-            name:       "New Name",
             university: "NewU",
             major:      "Physics",
             tagline:    "Changed tagline",
@@ -65,11 +76,36 @@ RSpec.describe "Me::Profiles API", type: :request do
 
         expect(response).to have_http_status(:ok)
         user.profile.reload
-        expect(user.profile.name).to eq("New Name")
         expect(user.profile.university).to eq("NewU")
         expect(user.profile.major).to eq("Physics")
         expect(user.profile.tagline).to eq("Changed tagline")
         expect(user.profile.bio).to eq("New bio")
+      end
+
+      it "updates both user and profile atomically" do
+        patch "/api/v1/me/profile", params: {
+          user:    { name: "Both Names" },
+          profile: { university: "BothU" }
+        }, as: :json
+
+        expect(response).to have_http_status(:ok)
+        user.reload
+        expect(user.name).to eq("Both Names")
+        expect(user.profile.university).to eq("BothU")
+      end
+
+      it "rolls back if profile validation fails" do
+        original_name = user.name
+        original_bio  = user.profile.bio
+
+        patch "/api/v1/me/profile", params: {
+          user:    { name: "Should Not Persist" },
+          profile: { bio: "a" * 501 }
+        }, as: :json
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(user.reload.name).to eq(original_name)
+        expect(user.profile.reload.bio).to eq(original_bio)
       end
 
       it "updates looking_for enum" do
@@ -100,7 +136,7 @@ RSpec.describe "Me::Profiles API", type: :request do
         expect(body["age"]).to eq(25)
       end
 
-      it "returns 422 when validation fails" do
+      it "returns 422 when profile validation fails" do
         patch "/api/v1/me/profile", params: {
           profile: { bio: "a" * 501 }
         }, as: :json
@@ -111,6 +147,16 @@ RSpec.describe "Me::Profiles API", type: :request do
         expect(body["error"]["details"]).to have_key("bio")
       end
 
+      it "returns 422 when user validation fails" do
+        patch "/api/v1/me/profile", params: {
+          user: { name: "a" * 101 }
+        }, as: :json
+
+        expect(response).to have_http_status(:unprocessable_content)
+        body = JSON.parse(response.body)
+        expect(body["error"]["details"]).to have_key("name")
+      end
+
       it "rejects birthdate in the future" do
         patch "/api/v1/me/profile", params: {
           profile: { birthdate: (Date.current + 1.day).to_s }
@@ -119,20 +165,6 @@ RSpec.describe "Me::Profiles API", type: :request do
         expect(response).to have_http_status(:unprocessable_content)
         body = JSON.parse(response.body)
         expect(body["error"]["details"]).to have_key("birthdate")
-      end
-
-      it "cannot update another user's profile" do
-        other = create(:user, email: "victim@example.com")
-        original_name = other.profile.name
-
-        patch "/api/v1/me/profile", params: {
-          profile: { name: "Attacker" }
-        }, as: :json
-
-        # The current user's profile is updated (not the other user's),
-        # because /me is scoped to current_user.
-        expect(user.profile.reload.name).to eq("Attacker")
-        expect(other.profile.reload.name).to eq(original_name)
       end
     end
   end

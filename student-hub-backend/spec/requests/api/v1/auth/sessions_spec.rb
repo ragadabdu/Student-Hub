@@ -103,14 +103,15 @@ RSpec.describe "Authentication sessions", type: :request do
     end
 
     it "includes the user's profile" do
-      user.profile.update!(name: "Carol S.", university: "MIT")
+      user.update!(name: "Carol S.")
+      user.profile.update!(university: "MIT")
 
       sign_in(user)
       get "/api/v1/auth/me"
 
       body = JSON.parse(response.body)
       expect(body["user"]["profile"]).to be_present
-      expect(body["user"]["profile"]["name"]).to eq("Carol S.")
+      expect(body["user"]["name"]).to eq("Carol S.")
       expect(body["user"]["profile"]["university"]).to eq("MIT")
     end
   end

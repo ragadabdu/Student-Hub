@@ -622,3 +622,25 @@ Processing by Api::V1::HealthController#show as */*
 Completed 200 OK in 11ms (Views: 6.2ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 3.2ms)
 
 
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+  [1m[35m (2.5ms)[0m  [1m[34mSELECT pg_try_advisory_lock(7824488612134783575) /*application='Backend'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Load (4.4ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='Backend'*/[0m
+  [1m[36mActiveRecord::InternalMetadata Load (6.9ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = 'environment' ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1 /*application='Backend'*/[0m
+Migrating to MoveNameFromProfilesToUsers (20260916210928)
+  [1m[36mTRANSACTION (0.9ms)[0m  [1m[35mBEGIN /*application='Backend'*/[0m
+  [1m[35m (14.4ms)[0m  [1m[35mALTER TABLE "users" ADD "name" character varying(100) /*application='Backend'*/[0m
+  [1m[35m (34.4ms)[0m  [1m[33mUPDATE users
+   SET name = profiles.name
+  FROM profiles
+ WHERE profiles.user_id = users.id
+   AND profiles.name IS NOT NULL
+ /*application='Backend'*/[0m
+  [1m[35m (16.2ms)[0m  [1m[35mALTER TABLE "profiles" DROP COLUMN "name" /*application='Backend'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Create (2.4ms)[0m  [1m[32mINSERT INTO "schema_migrations" ("version") VALUES ('20260916210928') RETURNING "version" /*application='Backend'*/[0m
+  [1m[36mTRANSACTION (8.1ms)[0m  [1m[35mCOMMIT /*application='Backend'*/[0m
+  [1m[35m (2.2ms)[0m  [1m[34mSELECT pg_advisory_unlock(7824488612134783575) /*application='Backend'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Load (1.8ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='Backend'*/[0m
+  [1m[35mSQL (1.6ms)[0m  [1m[35mSET search_path TO public /*application='Backend'*/[0m
+  [1m[35mSQL (1.9ms)[0m  [1m[35mSET search_path TO "$user", public /*application='Backend'*/[0m
+  [1m[35mSQL (1.8ms)[0m  [1m[35mSET search_path TO public /*application='Backend'*/[0m
+  [1m[35mSQL (0.9ms)[0m  [1m[35mSET search_path TO "$user", public /*application='Backend'*/[0m

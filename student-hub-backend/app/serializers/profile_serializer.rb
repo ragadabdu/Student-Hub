@@ -2,7 +2,7 @@
 
 class ProfileSerializer < ActiveModel::Serializer
   attributes :id,
-             :name,
+             :user_id,
              :university,
              :major,
              :tagline,
@@ -12,17 +12,25 @@ class ProfileSerializer < ActiveModel::Serializer
              :show_on_explore,
              :age,
              :created_at,
-             :updated_at
+             :updated_at,
+             :user,
+             :interests,
+             :skills
 
   # `birthdate` is deliberately omitted. Clients see only `age`.
-  # This is a privacy decision: exact DOB is more sensitive than age.
 
-  has_many :interests
-  has_many :skills
-
-  # Controller passes `include_portfolio_links: true` when we want links.
-  # Default: omit (they're only relevant on detail views).
   attribute :portfolio_links, if: :include_portfolio_links?
+
+  # The "public user" shape — id, name, avatar_url.
+  # This is the canonical way users are exposed inline across the API.
+  # See docs (in code) for why this shape matters.
+  def user
+    {
+      id:         object.user.id,
+      name:       object.user.name,
+      avatar_url: nil  # TODO: Active Storage (Phase 8)
+    }
+  end
 
   def age
     object.age

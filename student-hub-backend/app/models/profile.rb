@@ -29,9 +29,9 @@ class Profile < ApplicationRecord
   # ------------------------------------------------------------------
   # Validations
   # ------------------------------------------------------------------
+  # Note: `name` is now on User, not Profile.
   validates :bio,     length: { maximum: 500 }, allow_blank: true
   validates :tagline, length: { maximum: 160 }, allow_blank: true
-  validates :name,    length: { maximum: 100 }, allow_blank: true
 
   validates :birthdate,
             comparison: { less_than_or_equal_to: -> { Date.current } },
