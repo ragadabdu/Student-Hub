@@ -18,6 +18,17 @@ Rails.application.routes.draw do
         delete "logout",   to: "sessions#destroy"
         get    "me",       to: "sessions#show"
       end
+
+      # Discoverable profiles (list and view).
+      resources :profiles, only: [:index, :show]
+
+      # Current user's own profile and related resources.
+      namespace :me do
+        resource  :profile,          only: [:show, :update]
+        resource  :interests,        only: [:update]
+        resource  :skills,           only: [:update]
+        resources :portfolio_links,  only: [:create, :destroy]
+      end
     end
   end
 end

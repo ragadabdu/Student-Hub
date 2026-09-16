@@ -23,6 +23,10 @@ module Api
       # session, just the anti-CSRF token.
       after_action :set_xsrf_cookie
 
+      # Every API controller requires authentication by default.
+      # Public endpoints (register, login, health) skip this explicitly.
+      before_action :authenticate_user!
+
       # ------------------------------------------------------------------
       # Error handling
       # ------------------------------------------------------------------
@@ -38,8 +42,12 @@ module Api
       # `authenticate_user!` is provided by Devise. It will call
       # `unauthorized_response` (below) instead of trying to redirect.
       
+      # Override Devise's default `authenticate_user!` so unauthenticated
+      # requests get our JSON error envelope instead of a redirect.
+      # Every API controller inherits this.
+      def authenticate_user!
+        return if user_signed_in?
 
-      def unauthorized_response
         render_error(
           code:    "UNAUTHORIZED",
           message: "Authentication required",
@@ -76,7 +84,7 @@ module Api
           code:    "VALIDATION_ERROR",
           message: "Validation failed",
           details: exception.record.errors.to_hash,
-          status:  :unprocessable_entity
+          status:  :unprocessable_content
         )
       end
 
@@ -93,7 +101,7 @@ module Api
         render_error(
           code:    "CSRF_INVALID",
           message: "CSRF token is missing or invalid",
-          status:  :unprocessable_entity
+          status:  :unprocessable_content
         )
       end
 

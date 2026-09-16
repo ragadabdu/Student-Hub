@@ -4,8 +4,6 @@ class Profile < ApplicationRecord
   # ------------------------------------------------------------------
   # Enums
   # ------------------------------------------------------------------
-  # looking_for values are shared with Project#looking_for.
-  # Changing these integers requires a data migration.
   enum :looking_for, {
     friends:               0,
     project_collaborators: 1,
@@ -22,6 +20,11 @@ class Profile < ApplicationRecord
   # Associations
   # ------------------------------------------------------------------
   belongs_to :user
+
+  # Interests, skills, and portfolio links are owned by User (not Profile),
+  # but they're part of a profile's public presentation. Delegating them
+  # lets the API treat a Profile as a single cohesive resource.
+  delegate :interests, :skills, :portfolio_links, to: :user
 
   # ------------------------------------------------------------------
   # Validations

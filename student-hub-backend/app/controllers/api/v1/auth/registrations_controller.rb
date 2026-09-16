@@ -16,6 +16,7 @@ module Api
         # prior session, so there is no CSRF state to protect against.
         # (An attacker can't force a victim to register an account they
         # don't control, unlike the login-CSRF scenario.)
+        skip_before_action :authenticate_user!,        only: :create
         skip_before_action :verify_authenticity_token, only: :create
 
         def create
@@ -31,7 +32,7 @@ module Api
               code:    "VALIDATION_ERROR",
               message: "Registration failed",
               details: user.errors.to_hash,
-              status:  :unprocessable_entity
+              status:  :unprocessable_content
             )
           end
         end

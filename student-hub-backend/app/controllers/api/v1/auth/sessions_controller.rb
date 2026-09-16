@@ -10,6 +10,7 @@ module Api
         # Public endpoint. Login has no prior session to protect, so we
         # skip CSRF here. (Login-CSRF exists as a theoretical attack, but
         # for an MVP it's an acceptable tradeoff; we can revisit.)
+        skip_before_action :authenticate_user!,        only: :create
         skip_before_action :verify_authenticity_token, only: :create
 
         def create

@@ -51,7 +51,7 @@ RSpec.describe "POST /api/v1/auth/register", type: :request do
 
       post "/api/v1/auth/register", params: valid_params, as: :json
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
 
       body = JSON.parse(response.body)
       expect(body["error"]["code"]).to eq("VALIDATION_ERROR")
@@ -63,7 +63,7 @@ RSpec.describe "POST /api/v1/auth/register", type: :request do
 
       post "/api/v1/auth/register", params: params, as: :json
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       body = JSON.parse(response.body)
       expect(body["error"]["details"]).to have_key("email")
     end
@@ -75,7 +75,7 @@ RSpec.describe "POST /api/v1/auth/register", type: :request do
 
       post "/api/v1/auth/register", params: params, as: :json
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       body = JSON.parse(response.body)
       expect(body["error"]["details"]).to have_key("password")
     end
@@ -91,7 +91,7 @@ RSpec.describe "POST /api/v1/auth/register", type: :request do
 
       post "/api/v1/auth/register", params: params, as: :json
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       body = JSON.parse(response.body)
       expect(body["error"]["details"]).to have_key("password_confirmation")
     end

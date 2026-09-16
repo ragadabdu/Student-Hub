@@ -38,6 +38,9 @@ gem "image_processing", "~> 1.2"
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin Ajax possible
 gem "rack-cors"
 
+# API serialization
+gem "active_model_serializers", "~> 0.10.14"
+
 # Authentication
 gem "devise", "~> 4.9"
 
