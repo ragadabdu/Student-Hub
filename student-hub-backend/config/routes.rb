@@ -19,6 +19,9 @@ Rails.application.routes.draw do
         get    "me",       to: "sessions#show"
       end
 
+      # Projects — full CRUD
+      resources :projects, only: [:index, :show, :create, :update, :destroy]
+
       # Discoverable profiles (list and view).
       resources :profiles, only: [:index, :show]
 
