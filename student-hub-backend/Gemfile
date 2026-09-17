@@ -38,6 +38,9 @@ gem "image_processing", "~> 1.2"
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin Ajax possible
 gem "rack-cors"
 
+# Rate limiting / brute-force protection
+gem "rack-attack", "~> 6.7"
+
 # API serialization
 gem "active_model_serializers", "~> 0.10.14"
 
@@ -63,4 +66,8 @@ group :development, :test do
   gem 'faker'
   gem 'shoulda-matchers'
   gem 'rspec-rails'  
+end
+
+group :development do
+  gem "bullet"
 end
