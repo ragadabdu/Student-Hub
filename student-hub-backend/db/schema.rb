@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_17_070103) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_17_110635) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -26,6 +26,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_17_070103) do
     t.index ["user_id", "target_user_id"], name: "index_connections_on_user_and_target", unique: true
     t.index ["user_id"], name: "index_connections_on_user_id"
     t.check_constraint "user_id <> target_user_id", name: "connections_no_self"
+  end
+
+  create_table "conversations", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "last_message_at"
+    t.uuid "match_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["last_message_at"], name: "index_conversations_on_last_message_at"
+    t.index ["match_id"], name: "index_conversations_on_match_id", unique: true
   end
 
   create_table "interests", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -46,6 +55,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_17_070103) do
     t.index ["user_id", "matched_user_id"], name: "index_matches_on_user_and_matched_user", unique: true
     t.index ["user_id"], name: "index_matches_on_user_id"
     t.check_constraint "user_id < matched_user_id", name: "matches_normalized_order"
+  end
+
+  create_table "messages", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.text "content", null: false
+    t.uuid "conversation_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "read_at"
+    t.datetime "updated_at", null: false
+    t.uuid "user_id", null: false
+    t.index ["conversation_id", "created_at"], name: "index_messages_on_conversation_and_created_at"
+    t.index ["conversation_id", "read_at"], name: "index_messages_on_conversation_and_read_at"
+    t.index ["conversation_id"], name: "index_messages_on_conversation_id"
+    t.index ["user_id"], name: "index_messages_on_user_id"
   end
 
   create_table "portfolio_links", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -152,8 +174,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_17_070103) do
 
   add_foreign_key "connections", "users"
   add_foreign_key "connections", "users", column: "target_user_id"
+  add_foreign_key "conversations", "matches"
   add_foreign_key "matches", "users"
   add_foreign_key "matches", "users", column: "matched_user_id"
+  add_foreign_key "messages", "conversations"
+  add_foreign_key "messages", "users"
   add_foreign_key "portfolio_links", "users"
   add_foreign_key "profiles", "users"
   add_foreign_key "project_skills", "projects"

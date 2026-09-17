@@ -794,3 +794,129 @@ FOREIGN KEY ("matched_user_id")
 Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
 Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
 Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+  [1m[35m (2.2ms)[0m  [1m[34mSELECT pg_try_advisory_lock(7824488612134783575) /*application='Backend'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Load (4.0ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='Backend'*/[0m
+  [1m[36mActiveRecord::InternalMetadata Load (8.7ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = 'environment' ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1 /*application='Backend'*/[0m
+Migrating to CreateConversationsAndMessages (20260917105218)
+  [1m[36mTRANSACTION (1.1ms)[0m  [1m[35mBEGIN /*application='Backend'*/[0m
+  [1m[35m (45.8ms)[0m  [1m[35mCREATE TABLE "conversations" ("id" uuid DEFAULT gen_random_uuid() NOT NULL PRIMARY KEY, "match_id" uuid NOT NULL, "last_message_at" timestamp(6), "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL, CONSTRAINT "fk_rails_9f8bf5ab93"
+FOREIGN KEY ("match_id")
+  REFERENCES "matches" ("id")
+) /*application='Backend'*/[0m
+  [1m[35m (1.9ms)[0m  [1m[35mCREATE UNIQUE INDEX "index_conversations_on_match_id" ON "conversations" ("match_id") /*application='Backend'*/[0m
+  [1m[35m (6.5ms)[0m  [1m[35mCREATE TABLE "messages" ("id" uuid DEFAULT gen_random_uuid() NOT NULL PRIMARY KEY, "conversation_id" uuid NOT NULL, "user_id" uuid NOT NULL, "content" text NOT NULL, "read_at" timestamp(6), "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL, CONSTRAINT "fk_rails_7f927086d2"
+FOREIGN KEY ("conversation_id")
+  REFERENCES "conversations" ("id")
+, CONSTRAINT "fk_rails_273a25a7a6"
+FOREIGN KEY ("user_id")
+  REFERENCES "users" ("id")
+) /*application='Backend'*/[0m
+  [1m[35m (2.0ms)[0m  [1m[35mCREATE INDEX "index_messages_on_conversation_id" ON "messages" ("conversation_id") /*application='Backend'*/[0m
+  [1m[35m (1.7ms)[0m  [1m[35mCREATE INDEX "index_messages_on_user_id" ON "messages" ("user_id") /*application='Backend'*/[0m
+  [1m[35m (2.1ms)[0m  [1m[35mCREATE INDEX "index_messages_on_conversation_and_created_at" ON "messages" ("conversation_id", "created_at") /*application='Backend'*/[0m
+  [1m[35m (2.2ms)[0m  [1m[35mCREATE INDEX "index_messages_on_conversation_and_read_at" ON "messages" ("conversation_id", "read_at") /*application='Backend'*/[0m
+  [1m[35m (1.9ms)[0m  [1m[35mCREATE INDEX "index_conversations_on_last_message_at" ON "conversations" ("last_message_at") /*application='Backend'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Create (1.1ms)[0m  [1m[32mINSERT INTO "schema_migrations" ("version") VALUES ('20260917105218') RETURNING "version" /*application='Backend'*/[0m
+  [1m[36mTRANSACTION (4.8ms)[0m  [1m[35mCOMMIT /*application='Backend'*/[0m
+  [1m[35m (1.3ms)[0m  [1m[34mSELECT pg_advisory_unlock(7824488612134783575) /*application='Backend'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Load (1.2ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='Backend'*/[0m
+  [1m[35mSQL (1.1ms)[0m  [1m[35mSET search_path TO public /*application='Backend'*/[0m
+  [1m[35mSQL (1.2ms)[0m  [1m[35mSET search_path TO "$user", public /*application='Backend'*/[0m
+  [1m[35mSQL (1.1ms)[0m  [1m[35mSET search_path TO public /*application='Backend'*/[0m
+  [1m[35mSQL (0.8ms)[0m  [1m[35mSET search_path TO "$user", public /*application='Backend'*/[0m
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+  [1m[35m (0.7ms)[0m  [1m[34mSELECT pg_try_advisory_lock(7824488612134783575) /*application='Backend'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Load (1.2ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='Backend'*/[0m
+  [1m[36mActiveRecord::InternalMetadata Load (1.3ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = 'environment' ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1 /*application='Backend'*/[0m
+Migrating to BackfillConversationsForExistingMatches (20260917110635)
+  [1m[36mTRANSACTION (0.9ms)[0m  [1m[35mBEGIN /*application='Backend'*/[0m
+  [1m[35m (9.4ms)[0m  [1m[32mINSERT INTO conversations (id, match_id, created_at, updated_at)
+SELECT gen_random_uuid(), matches.id, NOW(), NOW()
+FROM matches
+LEFT JOIN conversations ON conversations.match_id = matches.id
+WHERE conversations.id IS NULL
+ /*application='Backend'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Create (0.8ms)[0m  [1m[32mINSERT INTO "schema_migrations" ("version") VALUES ('20260917110635') RETURNING "version" /*application='Backend'*/[0m
+  [1m[36mTRANSACTION (2.2ms)[0m  [1m[35mCOMMIT /*application='Backend'*/[0m
+  [1m[35m (0.8ms)[0m  [1m[34mSELECT pg_advisory_unlock(7824488612134783575) /*application='Backend'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.7ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='Backend'*/[0m
+  [1m[35mSQL (0.6ms)[0m  [1m[35mSET search_path TO public /*application='Backend'*/[0m
+  [1m[35mSQL (0.7ms)[0m  [1m[35mSET search_path TO "$user", public /*application='Backend'*/[0m
+  [1m[35mSQL (0.8ms)[0m  [1m[35mSET search_path TO public /*application='Backend'*/[0m
+  [1m[35mSQL (0.6ms)[0m  [1m[35mSET search_path TO "$user", public /*application='Backend'*/[0m
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+  [1m[36mUser Load (13.4ms)[0m  [1m[34mSELECT "users".* FROM "users" ORDER BY "users"."id" ASC LIMIT 1 /*application='Backend'*/[0m
+  [1m[36mUser Load (1.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" != '8e18890b-0905-48a0-9f5a-01aa368e30fe' ORDER BY "users"."id" ASC LIMIT 1 /*application='Backend'*/[0m
+  [1m[36mTRANSACTION (1.1ms)[0m  [1m[35mBEGIN /*application='Backend'*/[0m
+  [1m[36mUser Exists? (4.5ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE "users"."email" = 'test2@example.com' LIMIT 1 /*application='Backend'*/[0m
+  [1m[36mUser Create (1.3ms)[0m  [1m[32mINSERT INTO "users" ("created_at", "current_sign_in_at", "current_sign_in_ip", "email", "encrypted_password", "last_sign_in_at", "last_sign_in_ip", "remember_created_at", "reset_password_sent_at", "reset_password_token", "sign_in_count", "updated_at", "name") VALUES ('2026-09-17 11:18:28.549556', NULL, NULL, 'test2@example.com', '$2a$12$FdM77utaeAwrzZOUdmBYGuu31.9o/PxWcoHva5jbIQTTseX/L413m', NULL, NULL, NULL, NULL, NULL, 0, '2026-09-17 11:18:28.549556', NULL) RETURNING "id" /*application='Backend'*/[0m
+  [1m[36mProfile Create (14.7ms)[0m  [1m[32mINSERT INTO "profiles" ("bio", "birthdate", "created_at", "looking_for", "major", "profile_visibility", "show_on_explore", "tagline", "university", "updated_at", "user_id") VALUES (NULL, NULL, '2026-09-17 11:18:28.585984', 0, NULL, 0, TRUE, NULL, NULL, '2026-09-17 11:18:28.585984', '4dc87d4b-2182-4cf2-b5bc-7d4f47152efc') RETURNING "id" /*application='Backend'*/[0m
+  ↳ app/models/user.rb:79:in 'User#create_default_profile'
+  [1m[36mProfile Load (1.4ms)[0m  [1m[34mSELECT "profiles".* FROM "profiles" WHERE "profiles"."user_id" = '4dc87d4b-2182-4cf2-b5bc-7d4f47152efc' LIMIT 1 /*application='Backend'*/[0m
+  ↳ app/models/user.rb:79:in 'User#create_default_profile'
+  [1m[36mTRANSACTION (3.3ms)[0m  [1m[35mCOMMIT /*application='Backend'*/[0m
+  [1m[36mMatch Load (1.7ms)[0m  [1m[34mSELECT "matches".* FROM "matches" WHERE "matches"."user_id" = '4dc87d4b-2182-4cf2-b5bc-7d4f47152efc' AND "matches"."matched_user_id" = '8e18890b-0905-48a0-9f5a-01aa368e30fe' LIMIT 1 /*application='Backend'*/[0m
+  ↳ app/models/match.rb:43:in 'Match.create_between!'
+  [1m[36mTRANSACTION (1.0ms)[0m  [1m[35mBEGIN /*application='Backend'*/[0m
+  ↳ app/models/match.rb:43:in 'Match.create_between!'
+  [1m[36mUser Load (1.4ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = '4dc87d4b-2182-4cf2-b5bc-7d4f47152efc' LIMIT 1 /*application='Backend'*/[0m
+  ↳ app/models/match.rb:43:in 'Match.create_between!'
+  [1m[36mUser Load (1.3ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = '8e18890b-0905-48a0-9f5a-01aa368e30fe' LIMIT 1 /*application='Backend'*/[0m
+  ↳ app/models/match.rb:43:in 'Match.create_between!'
+  [1m[36mMatch Exists? (1.1ms)[0m  [1m[34mSELECT 1 AS one FROM "matches" WHERE "matches"."user_id" = '4dc87d4b-2182-4cf2-b5bc-7d4f47152efc' AND "matches"."matched_user_id" = '8e18890b-0905-48a0-9f5a-01aa368e30fe' LIMIT 1 /*application='Backend'*/[0m
+  ↳ app/models/match.rb:43:in 'Match.create_between!'
+  [1m[36mMatch Create (1.6ms)[0m  [1m[32mINSERT INTO "matches" ("user_id", "matched_user_id", "created_at", "updated_at") VALUES ('4dc87d4b-2182-4cf2-b5bc-7d4f47152efc', '8e18890b-0905-48a0-9f5a-01aa368e30fe', '2026-09-17 11:18:28.666876', '2026-09-17 11:18:28.666876') RETURNING "id" /*application='Backend'*/[0m
+  ↳ app/models/match.rb:43:in 'Match.create_between!'
+  [1m[36mConversation Exists? (1.2ms)[0m  [1m[34mSELECT 1 AS one FROM "conversations" WHERE "conversations"."match_id" = 'f404f71e-103c-45ea-a266-19b402041b36' LIMIT 1 /*application='Backend'*/[0m
+  ↳ app/models/match.rb:77:in 'Match#create_conversation!'
+  [1m[36mConversation Create (2.0ms)[0m  [1m[32mINSERT INTO "conversations" ("match_id", "last_message_at", "created_at", "updated_at") VALUES ('f404f71e-103c-45ea-a266-19b402041b36', NULL, '2026-09-17 11:18:28.699027', '2026-09-17 11:18:28.699027') RETURNING "id" /*application='Backend'*/[0m
+  ↳ app/models/match.rb:77:in 'Match#create_conversation!'
+  [1m[36mTRANSACTION (2.7ms)[0m  [1m[35mCOMMIT /*application='Backend'*/[0m
+  ↳ app/models/match.rb:43:in 'Match.create_between!'
+  [1m[36mConversation Eager Load (1.3ms)[0m  [1m[34mSELECT "conversations"."id" AS t0_r0, "conversations"."match_id" AS t0_r1, "conversations"."last_message_at" AS t0_r2, "conversations"."created_at" AS t0_r3, "conversations"."updated_at" AS t0_r4, "matches"."id" AS t1_r0, "matches"."user_id" AS t1_r1, "matches"."matched_user_id" AS t1_r2, "matches"."created_at" AS t1_r3, "matches"."updated_at" AS t1_r4, "messages"."id" AS t2_r0, "messages"."conversation_id" AS t2_r1, "messages"."user_id" AS t2_r2, "messages"."content" AS t2_r3, "messages"."read_at" AS t2_r4, "messages"."created_at" AS t2_r5, "messages"."updated_at" AS t2_r6 FROM "conversations" INNER JOIN "matches" ON "matches"."id" = "conversations"."match_id" LEFT OUTER JOIN "messages" ON "messages"."conversation_id" = "conversations"."id" WHERE (matches.user_id = '8e18890b-0905-48a0-9f5a-01aa368e30fe' OR matches.matched_user_id = '8e18890b-0905-48a0-9f5a-01aa368e30fe') ORDER BY last_message_at DESC NULLS LAST, created_at DESC /*application='Backend'*/[0m
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+  [1m[36mUser Load (1.6ms)[0m  [1m[34mSELECT "users".* FROM "users" ORDER BY "users"."id" ASC LIMIT 1 /*application='Backend'*/[0m
+  [1m[36mUser Load (1.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" != '4dc87d4b-2182-4cf2-b5bc-7d4f47152efc' ORDER BY "users"."id" ASC LIMIT 1 /*application='Backend'*/[0m
+  [1m[36mMatch Load (1.2ms)[0m  [1m[34mSELECT "matches".* FROM "matches" WHERE "matches"."user_id" = '4dc87d4b-2182-4cf2-b5bc-7d4f47152efc' AND "matches"."matched_user_id" = '8e18890b-0905-48a0-9f5a-01aa368e30fe' LIMIT 1 /*application='Backend'*/[0m
+  ↳ app/models/match.rb:43:in 'Match.create_between!'
+  [1m[36mConversation Load (1.6ms)[0m  [1m[34mSELECT "conversations".* FROM "conversations" WHERE "conversations"."match_id" = 'f404f71e-103c-45ea-a266-19b402041b36' LIMIT 1 /*application='Backend'*/[0m
+  [1m[36mMessage Load (1.5ms)[0m  [1m[34mSELECT "messages".* FROM "messages" WHERE "messages"."conversation_id" = '6b337211-ea23-4951-9006-7b880b8fd383' /*application='Backend'*/[0m
+  [1m[36mTRANSACTION (0.7ms)[0m  [1m[35mBEGIN /*application='Backend'*/[0m
+  [1m[36mMessage Create (3.9ms)[0m  [1m[32mINSERT INTO "messages" ("conversation_id", "user_id", "content", "read_at", "created_at", "updated_at") VALUES ('6b337211-ea23-4951-9006-7b880b8fd383', '4dc87d4b-2182-4cf2-b5bc-7d4f47152efc', 'Msg 0', NULL, '2026-09-17 11:23:49.983003', '2026-09-17 11:23:49.983003') RETURNING "id" /*application='Backend'*/[0m
+  [1m[36mConversation Update (3.4ms)[0m  [1m[33mUPDATE "conversations" SET "last_message_at" = '2026-09-17 11:23:49.983003' WHERE "conversations"."id" = '6b337211-ea23-4951-9006-7b880b8fd383' /*application='Backend'*/[0m
+  ↳ app/models/message.rb:31:in 'Message#touch_conversation'
+  [1m[36mTRANSACTION (2.4ms)[0m  [1m[35mCOMMIT /*application='Backend'*/[0m
+  [1m[36mTRANSACTION (0.7ms)[0m  [1m[35mBEGIN /*application='Backend'*/[0m
+  [1m[36mMessage Create (4.3ms)[0m  [1m[32mINSERT INTO "messages" ("conversation_id", "user_id", "content", "read_at", "created_at", "updated_at") VALUES ('6b337211-ea23-4951-9006-7b880b8fd383', '4dc87d4b-2182-4cf2-b5bc-7d4f47152efc', 'Msg 1', NULL, '2026-09-17 11:23:50.000010', '2026-09-17 11:23:50.000010') RETURNING "id" /*application='Backend'*/[0m
+  [1m[36mConversation Update (0.9ms)[0m  [1m[33mUPDATE "conversations" SET "last_message_at" = '2026-09-17 11:23:50.000010' WHERE "conversations"."id" = '6b337211-ea23-4951-9006-7b880b8fd383' /*application='Backend'*/[0m
+  ↳ app/models/message.rb:31:in 'Message#touch_conversation'
+  [1m[36mTRANSACTION (2.6ms)[0m  [1m[35mCOMMIT /*application='Backend'*/[0m
+  [1m[36mTRANSACTION (0.6ms)[0m  [1m[35mBEGIN /*application='Backend'*/[0m
+  [1m[36mMessage Create (3.5ms)[0m  [1m[32mINSERT INTO "messages" ("conversation_id", "user_id", "content", "read_at", "created_at", "updated_at") VALUES ('6b337211-ea23-4951-9006-7b880b8fd383', '4dc87d4b-2182-4cf2-b5bc-7d4f47152efc', 'Msg 2', NULL, '2026-09-17 11:23:50.014233', '2026-09-17 11:23:50.014233') RETURNING "id" /*application='Backend'*/[0m
+  [1m[36mConversation Update (0.9ms)[0m  [1m[33mUPDATE "conversations" SET "last_message_at" = '2026-09-17 11:23:50.014233' WHERE "conversations"."id" = '6b337211-ea23-4951-9006-7b880b8fd383' /*application='Backend'*/[0m
+  ↳ app/models/message.rb:31:in 'Message#touch_conversation'
+  [1m[36mTRANSACTION (2.3ms)[0m  [1m[35mCOMMIT /*application='Backend'*/[0m
+  [1m[36mTRANSACTION (0.6ms)[0m  [1m[35mBEGIN /*application='Backend'*/[0m
+  [1m[36mMessage Create (3.4ms)[0m  [1m[32mINSERT INTO "messages" ("conversation_id", "user_id", "content", "read_at", "created_at", "updated_at") VALUES ('6b337211-ea23-4951-9006-7b880b8fd383', '4dc87d4b-2182-4cf2-b5bc-7d4f47152efc', 'Msg 3', NULL, '2026-09-17 11:23:50.027746', '2026-09-17 11:23:50.027746') RETURNING "id" /*application='Backend'*/[0m
+  [1m[36mConversation Update (0.7ms)[0m  [1m[33mUPDATE "conversations" SET "last_message_at" = '2026-09-17 11:23:50.027746' WHERE "conversations"."id" = '6b337211-ea23-4951-9006-7b880b8fd383' /*application='Backend'*/[0m
+  ↳ app/models/message.rb:31:in 'Message#touch_conversation'
+  [1m[36mTRANSACTION (2.0ms)[0m  [1m[35mCOMMIT /*application='Backend'*/[0m
+  [1m[36mTRANSACTION (0.9ms)[0m  [1m[35mBEGIN /*application='Backend'*/[0m
+  [1m[36mMessage Create (3.7ms)[0m  [1m[32mINSERT INTO "messages" ("conversation_id", "user_id", "content", "read_at", "created_at", "updated_at") VALUES ('6b337211-ea23-4951-9006-7b880b8fd383', '4dc87d4b-2182-4cf2-b5bc-7d4f47152efc', 'Msg 4', NULL, '2026-09-17 11:23:50.039753', '2026-09-17 11:23:50.039753') RETURNING "id" /*application='Backend'*/[0m
+  [1m[36mConversation Update (0.8ms)[0m  [1m[33mUPDATE "conversations" SET "last_message_at" = '2026-09-17 11:23:50.039753' WHERE "conversations"."id" = '6b337211-ea23-4951-9006-7b880b8fd383' /*application='Backend'*/[0m
+  ↳ app/models/message.rb:31:in 'Message#touch_conversation'
+  [1m[36mTRANSACTION (2.5ms)[0m  [1m[35mCOMMIT /*application='Backend'*/[0m
+  [1m[36mMessage Count (2.1ms)[0m  [1m[34mSELECT COUNT(*) FROM "messages" WHERE "messages"."conversation_id" = '6b337211-ea23-4951-9006-7b880b8fd383' /*application='Backend'*/[0m
+  [1m[36mMessage Load (1.4ms)[0m  [1m[34mSELECT "messages".* FROM "messages" WHERE "messages"."conversation_id" = '6b337211-ea23-4951-9006-7b880b8fd383' ORDER BY "messages"."created_at" DESC, "messages"."id" DESC LIMIT 3 /*application='Backend'*/[0m
+  ↳ app/lib/cursor_pagination.rb:30:in 'CursorPagination.paginate'
+  [1m[36mUser Load (0.9ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = '4dc87d4b-2182-4cf2-b5bc-7d4f47152efc' /*application='Backend'*/[0m
+  ↳ app/lib/cursor_pagination.rb:30:in 'CursorPagination.paginate'
+  [1m[36mMessage Load (1.3ms)[0m  [1m[34mSELECT "messages".* FROM "messages" WHERE "messages"."conversation_id" = '6b337211-ea23-4951-9006-7b880b8fd383' AND ((messages.created_at, messages.id) < ('2026-09-17 00:00:00'::timestamptz, '23:50.027746Z:afc5d173-6cf5-48ef-bbde-78dcb2c1d40c'::uuid)) ORDER BY "messages"."created_at" DESC, "messages"."id" DESC LIMIT 3 /*application='Backend'*/[0m
+  ↳ app/lib/cursor_pagination.rb:30:in 'CursorPagination.paginate'

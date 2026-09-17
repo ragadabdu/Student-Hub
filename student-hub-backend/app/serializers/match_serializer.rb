@@ -7,14 +7,12 @@ class MatchSerializer < ActiveModel::Serializer
              :last_message,
              :matched_at
 
-  # `matched_user` is the OTHER user from the viewer's perspective.
-  # The controller passes `viewer: current_user` as an instance option.
   def matched_user
     other = object.other_user_for(viewer)
     {
       id:         other.id,
       name:       other.name,
-      avatar_url: nil  # TODO: Active Storage (Phase 8)
+      avatar_url: nil
     }
   end
 
@@ -24,9 +22,17 @@ class MatchSerializer < ActiveModel::Serializer
     end
   end
 
-  # Phase 6 will populate this with the most recent message.
   def last_message
-    nil
+    # Avoid N+1: if the conversation/messages weren't eager-loaded, this
+    # will query per match. Callers should `includes(conversation: :messages)`
+    # when listing many matches.
+    last = object.conversation&.last_message
+    return nil unless last
+
+    ActiveModelSerializers::SerializableResource.new(
+      last,
+      serializer: MessageSerializer
+    ).as_json
   end
 
   def matched_at

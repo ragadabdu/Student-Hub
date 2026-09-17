@@ -34,6 +34,11 @@ Rails.application.routes.draw do
       # Matches — mutual connections between users.
       resources :matches, only: [:index, :show, :destroy]
 
+      # Conversations and messages
+      resources :conversations, only: [:index, :show] do
+        resources :messages, only: [:index, :create, :destroy]
+      end
+
       # Current user's own profile and related resources.
       namespace :me do
         resource  :profile,          only: [:show, :update]
