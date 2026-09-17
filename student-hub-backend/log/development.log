@@ -974,3 +974,14 @@ Using vips to process variants requires the libvips library. Please install libv
   [1m[36mProfile Load (1.2ms)[0m  [1m[34mSELECT "profiles".* FROM "profiles" WHERE "profiles"."user_id" = '4dc87d4b-2182-4cf2-b5bc-7d4f47152efc' LIMIT 1 /*application='Backend'*/[0m
 Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
 Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Started HEAD "/api/v1/health" for ::1 at 2026-09-17 15:38:04 +0300
+  [1m[36mActiveRecord::SchemaMigration Load (1.1ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='Backend'*/[0m
+Processing by Api::V1::HealthController#show as */*
+  [1m[35m (34.5ms)[0m  [1m[34mSELECT 1 /*action='show',application='Backend',controller='health'*/[0m
+  ↳ app/controllers/api/v1/health_controller.rb:29:in 'Api::V1::HealthController#database_reachable?'
+[active_model_serializers] Rendered ActiveModel::Serializer::Null with Hash (0.08ms)
+Completed 200 OK in 43ms (Views: 5.4ms | ActiveRecord: 43.2ms (1 query, 0 cached) | GC: 0.0ms)
+
+
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
