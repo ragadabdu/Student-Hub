@@ -10,10 +10,23 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_16_215538) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_17_062630) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
+
+  create_table "connections", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "status", default: 0, null: false
+    t.uuid "target_user_id", null: false
+    t.datetime "updated_at", null: false
+    t.uuid "user_id", null: false
+    t.index ["target_user_id", "user_id"], name: "index_connections_on_target_and_user"
+    t.index ["target_user_id"], name: "index_connections_on_target_user_id"
+    t.index ["user_id", "target_user_id"], name: "index_connections_on_user_and_target", unique: true
+    t.index ["user_id"], name: "index_connections_on_user_id"
+    t.check_constraint "user_id <> target_user_id", name: "connections_no_self"
+  end
 
   create_table "interests", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.datetime "created_at", null: false
@@ -125,6 +138,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_16_215538) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  add_foreign_key "connections", "users"
+  add_foreign_key "connections", "users", column: "target_user_id"
   add_foreign_key "portfolio_links", "users"
   add_foreign_key "profiles", "users"
   add_foreign_key "project_skills", "projects"

@@ -22,6 +22,12 @@ Rails.application.routes.draw do
       # Projects — full CRUD
       resources :projects, only: [:index, :show, :create, :update, :destroy]
 
+      # Discovery — swiping / interaction with discoverable profiles.
+      get  "discovery",                        to: "discovery#index"
+      post "discovery/:user_id/pass",          to: "discovery#pass"
+      post "discovery/:user_id/connect",       to: "discovery#connect"
+      post "discovery/:user_id/super_connect", to: "discovery#super_connect"
+
       # Discoverable profiles (list and view).
       resources :profiles, only: [:index, :show]
 

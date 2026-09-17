@@ -24,6 +24,20 @@ class User < ApplicationRecord
   has_many :portfolio_links, dependent: :destroy
   has_many :projects, dependent: :destroy
 
+  # Outgoing connections: interactions this user performed on others.
+  has_many :outgoing_connections,
+           class_name: "Connection",
+           foreign_key: :user_id,
+           dependent: :destroy,
+           inverse_of: :user
+
+  # Incoming connections: interactions others performed on this user.
+  has_many :incoming_connections,
+           class_name: "Connection",
+           foreign_key: :target_user_id,
+           dependent: :destroy,
+           inverse_of: :target_user
+
   # ------------------------------------------------------------------
   # Validations
   # ------------------------------------------------------------------
