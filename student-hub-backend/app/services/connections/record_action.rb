@@ -1,22 +1,9 @@
 # frozen_string_literal: true
 
 module Connections
-  # Records a single directional action (pass / connect / super_connect)
-  # from `user` on `target_user`.
-  #
-  # Semantics:
-  #   - Idempotent per pair: at most one Connection row exists for
-  #     (user, target_user). A subsequent action updates the existing row
-  #     rather than creating a new one.
-  #   - Last action wins: connecting then passing leaves status=:pass.
-  #
-  # Returns a hash:
-  #   { connection: Connection, match_created: Boolean }
-  #
-  # `match_created` is always false in Phase 4. It will be used in Phase 5
-  # when we implement mutual-connection detection.
   class RecordAction
     ALLOWED_ACTIONS = %i[pass connect super_connect].freeze
+    POSITIVE_ACTIONS = %i[connect super_connect].freeze
 
     def self.call(user:, target_user:, action:)
       new(user: user, target_user: target_user, action: action).call
@@ -38,21 +25,39 @@ module Connections
       end
 
       connection = nil
+      match      = nil
 
       ActiveRecord::Base.transaction do
         connection = Connection.find_or_initialize_by(
           user_id:        @user.id,
           target_user_id: @target_user.id
         )
-
         connection.status = @action
         connection.save!
+
+        # Match detection: only positive actions can create matches.
+        # A "match" requires BOTH sides to have a positive action toward
+        # each other.
+        if POSITIVE_ACTIONS.include?(@action) && mutual_positive_connection_exists?
+          match = Match.create_between!(@user, @target_user)
+        end
       end
 
-      # Phase 5: check for mutual connection here and possibly create a Match.
-      match_created = false
+      {
+        connection:    connection,
+        match:         match,
+        match_created: match.present?
+      }
+    end
 
-      { connection: connection, match_created: match_created }
+    private
+
+    def mutual_positive_connection_exists?
+      Connection
+        .where(user_id:        @target_user.id,
+               target_user_id: @user.id,
+               status:         POSITIVE_ACTIONS)
+        .exists?
     end
   end
 end

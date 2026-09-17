@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_17_062630) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_17_070103) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -34,6 +34,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_17_062630) do
     t.string "name", null: false
     t.datetime "updated_at", null: false
     t.index "lower((name)::text)", name: "index_interests_on_lower_name", unique: true
+  end
+
+  create_table "matches", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.uuid "matched_user_id", null: false
+    t.datetime "updated_at", null: false
+    t.uuid "user_id", null: false
+    t.index ["matched_user_id", "user_id"], name: "index_matches_on_matched_user_and_user"
+    t.index ["matched_user_id"], name: "index_matches_on_matched_user_id"
+    t.index ["user_id", "matched_user_id"], name: "index_matches_on_user_and_matched_user", unique: true
+    t.index ["user_id"], name: "index_matches_on_user_id"
+    t.check_constraint "user_id < matched_user_id", name: "matches_normalized_order"
   end
 
   create_table "portfolio_links", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -140,6 +152,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_17_062630) do
 
   add_foreign_key "connections", "users"
   add_foreign_key "connections", "users", column: "target_user_id"
+  add_foreign_key "matches", "users"
+  add_foreign_key "matches", "users", column: "matched_user_id"
   add_foreign_key "portfolio_links", "users"
   add_foreign_key "profiles", "users"
   add_foreign_key "project_skills", "projects"

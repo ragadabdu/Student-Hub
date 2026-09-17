@@ -31,6 +31,9 @@ Rails.application.routes.draw do
       # Discoverable profiles (list and view).
       resources :profiles, only: [:index, :show]
 
+      # Matches — mutual connections between users.
+      resources :matches, only: [:index, :show, :destroy]
+
       # Current user's own profile and related resources.
       namespace :me do
         resource  :profile,          only: [:show, :update]

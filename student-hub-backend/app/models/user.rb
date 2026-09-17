@@ -38,6 +38,28 @@ class User < ApplicationRecord
            dependent: :destroy,
            inverse_of: :target_user
 
+    # Outgoing matches: matches where this user is the lower-ID side.
+  # Note: because matches are normalized (user_id < matched_user_id),
+  # this is NOT "matches I created" — it's just one side of the pair.
+  has_many :matches_as_lower,
+           class_name: "Match",
+           foreign_key: :user_id,
+           dependent: :destroy,
+           inverse_of: :user
+
+  # Incoming matches: matches where this user is the higher-ID side.
+  has_many :matches_as_higher,
+           class_name: "Match",
+           foreign_key: :matched_user_id,
+           dependent: :destroy,
+           inverse_of: :matched_user
+
+  # All matches involving this user. Uses a scope-based association.
+  # Not a true `has_many :through`, so we implement via a method.
+  def matches
+    Match.involving(self)
+  end
+
   # ------------------------------------------------------------------
   # Validations
   # ------------------------------------------------------------------

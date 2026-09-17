@@ -56,8 +56,6 @@ module Api
       private
 
       def act(action)
-        # Self-action check happens first, before anything else. If it
-        # fails, we render and stop — no further processing.
         return render_self_action_error if params[:user_id] == current_user.id
 
         target = find_target_user!
@@ -73,10 +71,20 @@ module Api
           serializer: ConnectionSerializer
         ).as_json
 
-        render json: {
+        payload = {
           connection:    serialized_connection,
           match_created: result[:match_created]
-        }, status: :ok
+        }
+
+        if result[:match].present?
+          payload[:match] = ActiveModelSerializers::SerializableResource.new(
+            result[:match],
+            serializer: MatchSerializer,
+            viewer:     current_user
+          ).as_json
+        end
+
+        render json: payload, status: :ok
       end
 
       def render_self_action_error
