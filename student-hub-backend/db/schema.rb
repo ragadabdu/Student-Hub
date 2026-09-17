@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_17_110635) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_17_114529) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -144,6 +144,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_17_110635) do
     t.index ["user_id"], name: "index_user_interests_on_user_id"
   end
 
+  create_table "user_settings", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "discovery_radius", default: 50, null: false
+    t.string "language", default: "en", null: false
+    t.boolean "notify_email", default: true, null: false
+    t.boolean "notify_matches", default: true, null: false
+    t.boolean "notify_messages", default: true, null: false
+    t.boolean "notify_project_updates", default: true, null: false
+    t.boolean "notify_push", default: true, null: false
+    t.boolean "show_last_active", default: true, null: false
+    t.boolean "show_online_status", default: true, null: false
+    t.string "theme", default: "system", null: false
+    t.datetime "updated_at", null: false
+    t.uuid "user_id", null: false
+    t.index ["user_id"], name: "index_user_settings_on_user_id", unique: true
+    t.check_constraint "discovery_radius >= 1 AND discovery_radius <= 500", name: "user_settings_discovery_radius_range"
+    t.check_constraint "theme::text = ANY (ARRAY['system'::character varying, 'light'::character varying, 'dark'::character varying]::text[])", name: "user_settings_theme_values"
+  end
+
   create_table "user_skills", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.datetime "created_at", null: false
     t.uuid "skill_id", null: false
@@ -186,6 +205,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_17_110635) do
   add_foreign_key "projects", "users"
   add_foreign_key "user_interests", "interests"
   add_foreign_key "user_interests", "users"
+  add_foreign_key "user_settings", "users"
   add_foreign_key "user_skills", "skills"
   add_foreign_key "user_skills", "users"
 end

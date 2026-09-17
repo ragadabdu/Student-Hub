@@ -920,3 +920,55 @@ Using vips to process variants requires the libvips library. Please install libv
   ↳ app/lib/cursor_pagination.rb:30:in 'CursorPagination.paginate'
   [1m[36mMessage Load (1.3ms)[0m  [1m[34mSELECT "messages".* FROM "messages" WHERE "messages"."conversation_id" = '6b337211-ea23-4951-9006-7b880b8fd383' AND ((messages.created_at, messages.id) < ('2026-09-17 00:00:00'::timestamptz, '23:50.027746Z:afc5d173-6cf5-48ef-bbde-78dcb2c1d40c'::uuid)) ORDER BY "messages"."created_at" DESC, "messages"."id" DESC LIMIT 3 /*application='Backend'*/[0m
   ↳ app/lib/cursor_pagination.rb:30:in 'CursorPagination.paginate'
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+  [1m[35m (0.7ms)[0m  [1m[34mSELECT pg_try_advisory_lock(7824488612134783575) /*application='Backend'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Load (1.1ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='Backend'*/[0m
+  [1m[36mActiveRecord::InternalMetadata Load (1.1ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = 'environment' ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1 /*application='Backend'*/[0m
+Migrating to CreateUserSettings (20260917114240)
+  [1m[36mTRANSACTION (0.5ms)[0m  [1m[35mBEGIN /*application='Backend'*/[0m
+  [1m[35m (15.1ms)[0m  [1m[35mCREATE TABLE "user_settings" ("id" uuid DEFAULT gen_random_uuid() NOT NULL PRIMARY KEY, "user_id" uuid NOT NULL, "notify_email" boolean DEFAULT TRUE NOT NULL, "notify_push" boolean DEFAULT TRUE NOT NULL, "notify_matches" boolean DEFAULT TRUE NOT NULL, "notify_messages" boolean DEFAULT TRUE NOT NULL, "notify_project_updates" boolean DEFAULT TRUE NOT NULL, "show_online_status" boolean DEFAULT TRUE NOT NULL, "show_last_active" boolean DEFAULT TRUE NOT NULL, "theme" character varying DEFAULT 'system' NOT NULL, "language" character varying DEFAULT 'en' NOT NULL, "discovery_radius" integer DEFAULT 50 NOT NULL, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL, CONSTRAINT "fk_rails_d1371c6356"
+FOREIGN KEY ("user_id")
+  REFERENCES "users" ("id")
+) /*application='Backend'*/[0m
+  [1m[35m (1.1ms)[0m  [1m[35mCREATE UNIQUE INDEX "index_user_settings_on_user_id" ON "user_settings" ("user_id") /*application='Backend'*/[0m
+  [1m[35m (1.0ms)[0m  [1m[35mALTER TABLE "user_settings" ADD CONSTRAINT user_settings_discovery_radius_range CHECK (discovery_radius >= 1 AND discovery_radius <= 500) /*application='Backend'*/[0m
+  [1m[35m (0.9ms)[0m  [1m[35mALTER TABLE "user_settings" ADD CONSTRAINT user_settings_theme_values CHECK (theme IN ('system', 'light', 'dark')) /*application='Backend'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Create (0.6ms)[0m  [1m[32mINSERT INTO "schema_migrations" ("version") VALUES ('20260917114240') RETURNING "version" /*application='Backend'*/[0m
+  [1m[36mTRANSACTION (3.3ms)[0m  [1m[35mCOMMIT /*application='Backend'*/[0m
+Migrating to BackfillUserSettings (20260917114529)
+  [1m[36mTRANSACTION (0.5ms)[0m  [1m[35mBEGIN /*application='Backend'*/[0m
+  [1m[35m (4.2ms)[0m  [1m[32mINSERT INTO user_settings (
+  id, user_id,
+  notify_email, notify_push, notify_matches, notify_messages, notify_project_updates,
+  show_online_status, show_last_active,
+  theme, language, discovery_radius,
+  created_at, updated_at
+)
+SELECT
+  gen_random_uuid(), users.id,
+  TRUE, TRUE, TRUE, TRUE, TRUE,
+  TRUE, TRUE,
+  'system', 'en', 50,
+  NOW(), NOW()
+FROM users
+LEFT JOIN user_settings ON user_settings.user_id = users.id
+WHERE user_settings.id IS NULL
+ /*application='Backend'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Create (1.8ms)[0m  [1m[32mINSERT INTO "schema_migrations" ("version") VALUES ('20260917114529') RETURNING "version" /*application='Backend'*/[0m
+  [1m[36mTRANSACTION (2.1ms)[0m  [1m[35mCOMMIT /*application='Backend'*/[0m
+  [1m[35m (0.9ms)[0m  [1m[34mSELECT pg_advisory_unlock(7824488612134783575) /*application='Backend'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.7ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='Backend'*/[0m
+  [1m[35mSQL (0.6ms)[0m  [1m[35mSET search_path TO public /*application='Backend'*/[0m
+  [1m[35mSQL (0.7ms)[0m  [1m[35mSET search_path TO "$user", public /*application='Backend'*/[0m
+  [1m[35mSQL (0.6ms)[0m  [1m[35mSET search_path TO public /*application='Backend'*/[0m
+  [1m[35mSQL (0.6ms)[0m  [1m[35mSET search_path TO "$user", public /*application='Backend'*/[0m
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+Using vips to process variants requires the libvips library. Please install libvips using the instructions on the libvips website.
+  [1m[36mUser Load (1.8ms)[0m  [1m[34mSELECT "users".* FROM "users" ORDER BY "users"."id" ASC LIMIT 1 /*application='Backend'*/[0m
+  [1m[36mUserSetting Load (1.2ms)[0m  [1m[34mSELECT "user_settings".* FROM "user_settings" WHERE "user_settings"."user_id" = '4dc87d4b-2182-4cf2-b5bc-7d4f47152efc' LIMIT 1 /*application='Backend'*/[0m
+  [1m[36mProfile Load (1.2ms)[0m  [1m[34mSELECT "profiles".* FROM "profiles" WHERE "profiles"."user_id" = '4dc87d4b-2182-4cf2-b5bc-7d4f47152efc' LIMIT 1 /*application='Backend'*/[0m

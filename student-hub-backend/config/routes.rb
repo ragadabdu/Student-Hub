@@ -45,6 +45,7 @@ Rails.application.routes.draw do
         resource  :interests,        only: [:update]
         resource  :skills,           only: [:update]
         resources :portfolio_links,  only: [:create, :destroy]
+        resource :settings, only: [:show, :update]
       end
     end
   end

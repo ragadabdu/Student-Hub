@@ -24,6 +24,8 @@ class User < ApplicationRecord
   has_many :portfolio_links, dependent: :destroy
   has_many :projects, dependent: :destroy
 
+  has_one :setting, class_name: "UserSetting", dependent: :destroy
+
   # Outgoing connections: interactions this user performed on others.
   has_many :outgoing_connections,
            class_name: "Connection",
@@ -72,10 +74,15 @@ class User < ApplicationRecord
   # Callbacks
   # ------------------------------------------------------------------
   after_create :create_default_profile
+  after_create :create_default_settings
 
   private
 
   def create_default_profile
     create_profile!
+  end
+
+  def create_default_settings
+    create_setting!
   end
 end
