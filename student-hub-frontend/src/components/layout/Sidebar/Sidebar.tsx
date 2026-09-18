@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { 
   Compass, 
   User, 
@@ -6,8 +6,11 @@ import {
   Heart, 
   MessageCircle, 
   Settings,
-  Sparkles 
+  Sparkles,
+  LogOut
 } from 'lucide-react';
+import { useState } from 'react';
+import { useAuth } from '../../../context/AuthContext';
 
 const navItems = [
   { path: '/', icon: Compass, label: 'Explore' },
@@ -20,6 +23,30 @@ const navItems = [
 
 export function Sidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, profile, logout } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await logout();
+      navigate('/login', { replace: true });
+    } catch (err) {
+      console.error('Logout failed:', err);
+      // logout() in AuthContext clears state in `finally`, so we still redirect.
+      navigate('/login', { replace: true });
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
+  // Fall back to a placeholder if name/avatar are not set yet.
+  const displayName = profile?.user?.name || user?.name || 'Student';
+  const displaySubtitle = profile?.major || profile?.university || 'Student';
+  const avatarUrl =
+    profile?.user?.avatarUrl ||
+    `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id ?? 'student'}`;
 
   return (
     <aside className="hidden lg:flex lg:flex-col w-64 bg-white border-r border-border h-screen sticky top-0 flex-shrink-0">
@@ -34,7 +61,6 @@ export function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
         {navItems.map(({ path, icon: Icon, label }) => {
-          // Check if this route is active based on current location
           const routeIsActive = location.pathname === path ||
             (path === '/' && location.pathname === '') ||
             (path !== '/' && location.pathname.startsWith(path));
@@ -61,18 +87,27 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* User avatar at bottom */}
+      {/* User section with logout */}
       <div className="p-4 border-t border-border">
         <div className="flex items-center gap-3">
           <img
-            src="https://api.dicebear.com/7.x/avataaars/svg?seed=student"
-            alt="Your avatar"
-            className="w-10 h-10 rounded-full bg-gray-200 object-cover"
+            src={avatarUrl}
+            alt={displayName}
+            className="w-10 h-10 rounded-full bg-gray-200 object-cover flex-shrink-0"
           />
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-text truncate">You</p>
-            <p className="text-xs text-text-secondary truncate">Student</p>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-text truncate">{displayName}</p>
+            <p className="text-xs text-text-secondary truncate">{displaySubtitle}</p>
           </div>
+          <button
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+            className="flex-shrink-0 p-2 rounded-lg text-text-secondary hover:text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="Log out"
+            title="Log out"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
         </div>
       </div>
     </aside>

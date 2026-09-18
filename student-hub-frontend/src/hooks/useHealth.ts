@@ -8,29 +8,29 @@ export function useHealth() {
   const [isConnected, setIsConnected] = useState(false);
 
   const checkHealth = useCallback(async () => {
-    console.log('🔍 Health check starting...'); // <-- Add this
+    //console.log('🔍 Health check starting...'); 
     setIsLoading(true);
     setError(null);
     try {
-      console.log('📡 Calling healthService.checkHealth()...'); // <-- Add this
+      //console.log('📡 Calling healthService.checkHealth()...'); 
       const result = await healthService.checkHealth();
-      console.log('✅ Health check result:', result); // <-- Add this
+      //console.log('✅ Health check result:', result); 
       setStatus(result);
       setIsConnected(result.status === 'ok');
     } catch (err) {
-      console.error('❌ Health check failed:', err); // <-- Add this
+      //console.error('❌ Health check failed:', err); 
       const errorMessage = err instanceof Error ? err.message : 'Failed to connect to API';
       setError(errorMessage);
       setIsConnected(false);
       console.error('Health check failed:', err);
     } finally {
       setIsLoading(false);
-      console.log('🏁 Health check completed'); // <-- Add this
+      //console.log('🏁 Health check completed'); 
     }
   }, []);
 
   useEffect(() => {
-    console.log('🔄 useHealth mounted, calling checkHealth...'); // <-- Add this
+    //console.log('🔄 useHealth mounted, calling checkHealth...'); 
     checkHealth();
   }, [checkHealth]);
 

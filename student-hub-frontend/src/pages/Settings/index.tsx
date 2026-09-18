@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useSettings } from '../../hooks/useSettings';
+import { useAuth } from '../../context/AuthContext';
 import { LoadingState } from '../../components/ui/LoadingState/LoadingState';
 import { Button } from '../../components/ui/Button/Button';
-import { AlertCircle, CheckCircle, Moon, Sun, Monitor, Globe, Eye, Bell, Mail, Users, RefreshCw, Shield } from 'lucide-react';
+import { AlertCircle, CheckCircle, Moon, Sun, Monitor, Globe, Eye, Bell, Mail, Users, RefreshCw, Shield, LogOut } from 'lucide-react';
 
 export default function Settings() {
   const {
@@ -15,7 +17,22 @@ export default function Settings() {
     resetSettings,
   } = useSettings();
 
+  const navigate = useNavigate();
+  const { logout } = useAuth();
   const [activeSection, setActiveSection] = useState<'preferences' | 'notifications' | 'privacy'>('preferences');
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await logout();
+    } catch (err) {
+      console.error('Logout failed:', err);
+    } finally {
+      setIsLoggingOut(false);
+      navigate('/login', { replace: true });
+    }
+  };
 
   if (isLoading) {
     return (
@@ -350,6 +367,23 @@ export default function Settings() {
           >
             <RefreshCw className="w-4 h-4 mr-2" />
             Reset to Defaults
+          </Button>
+        </div>
+
+        {/* Account */}
+        <div className="mt-8 pt-6 border-t border-border">
+          <h3 className="text-lg font-semibold text-text mb-2">Account</h3>
+          <p className="text-sm text-text-secondary mb-4">
+            Sign out of your Student Hub account on this device.
+          </p>
+          <Button
+            variant="danger"
+            onClick={handleLogout}
+            isLoading={isLoggingOut}
+            disabled={isLoggingOut}
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Log out
           </Button>
         </div>
       </div>
