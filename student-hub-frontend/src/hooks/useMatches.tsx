@@ -1,102 +1,82 @@
-import { useState, useEffect, useCallback } from 'react';
-import type { Match } from '../types/match';
+import { useCallback, useEffect, useState } from 'react';
 import { matchesService } from '../services/matches';
+import type { Match } from '../types/match';
+
+const PAGE_SIZE = 20;
 
 export function useMatches() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
-  const [isSendingMessage, setIsSendingMessage] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [unmatchingId, setUnmatchingId] = useState<string | null>(null);
 
   const loadMatches = useCallback(async () => {
     setIsLoading(true);
     setError(null);
+
     try {
-      const data = await matchesService.getMatches();
-      setMatches(data);
+      const { matches: list, meta } = await matchesService.list({
+        page,
+        perPage: PAGE_SIZE,
+      });
+      setMatches(list);
+      setTotalPages(meta.totalPages);
+      setTotalCount(meta.totalCount);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load matches';
-      setError(errorMessage);
-      console.error('Failed to load matches:', err);
+      const message = err instanceof Error ? err.message : 'Failed to load matches';
+      setError(message);
+      setMatches([]);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [page]);
 
   useEffect(() => {
     loadMatches();
   }, [loadMatches]);
 
-  const selectMatch = useCallback((matchId: string) => {
-    setSelectedMatchId(matchId);
-  }, []);
+  const unmatch = useCallback(async (matchId: string) => {
+    if (!window.confirm('Unmatch this person? This action cannot be undone.')) {
+      return false;
+    }
 
-  const clearSelectedMatch = useCallback(() => {
-    setSelectedMatchId(null);
-  }, []);
-
-  const getSelectedMatch = useCallback(() => {
-    return matches.find(m => m.id === selectedMatchId) || null;
-  }, [matches, selectedMatchId]);
-
-  const sendMessage = useCallback(async (content: string) => {
-    if (!selectedMatchId || !content.trim()) return false;
-    
-    setIsSendingMessage(true);
+    setUnmatchingId(matchId);
     try {
-      const result = await matchesService.sendMessage(selectedMatchId, content);
-      
-      // Update the match's last message preview
-      setMatches(prev => prev.map(m => 
-        m.id === selectedMatchId 
-          ? { 
-              ...m, 
-              lastMessage: { 
-                preview: content, 
-                sentAt: new Date() 
-              } 
-            }
-          : m
-      ));
-      
-      return result.success;
+      await matchesService.unmatch(matchId);
+      setMatches((prev) => prev.filter((m) => m.id !== matchId));
+      setTotalCount((prev) => Math.max(0, prev - 1));
+      return true;
     } catch (err) {
-      console.error('Failed to send message:', err);
+      console.error('Unmatch failed:', err);
+      setError(err instanceof Error ? err.message : 'Failed to unmatch');
       return false;
     } finally {
-      setIsSendingMessage(false);
+      setUnmatchingId(null);
     }
-  }, [selectedMatchId]);
+  }, []);
 
-  const unmatch = useCallback(async (matchId: string) => {
-    try {
-      const result = await matchesService.unmatch(matchId);
-      if (result.success) {
-        setMatches(prev => prev.filter(m => m.id !== matchId));
-        if (selectedMatchId === matchId) {
-          setSelectedMatchId(null);
-        }
-      }
-      return result.success;
-    } catch (err) {
-      console.error('Failed to unmatch:', err);
-      return false;
-    }
-  }, [selectedMatchId]);
+  const goToPage = useCallback(
+    (nextPage: number) => {
+      if (nextPage < 1 || nextPage > totalPages) return;
+      setPage(nextPage);
+    },
+    [totalPages],
+  );
 
   return {
     matches,
     isLoading,
     error,
-    selectedMatchId,
-    isSendingMessage,
+    page,
+    totalPages,
+    totalCount,
+    unmatchingId,
     loadMatches,
-    selectMatch,
-    clearSelectedMatch,
-    getSelectedMatch,
-    sendMessage,
     unmatch,
+    goToPage,
     hasMatches: matches.length > 0,
   };
 }

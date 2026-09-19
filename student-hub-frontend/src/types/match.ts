@@ -1,28 +1,26 @@
-// Match type.
+// Match type — matches the backend MatchSerializer.
 //
-// NOTE: This is the OLD mock shape, retained so the existing matches page
-// (MatchCard, MatchMessages, useMatches, services/matches) continues to
-// compile. It will be replaced in Phase FI.5 when we integrate the matches
-// page with the real backend.
+// Backend reference: app/serializers/match_serializer.rb
 //
-// The real backend shape is:
-//   { id, matchedUser: PublicUser, sharedInterests: Interest[],
-//     lastMessage: LastMessage | null, matchedAt: ISO8601 }
+// A match is normalized as one row per pair of users. The `matchedUser`
+// is the OTHER user from the perspective of the requesting user — the
+// backend computes it based on who is making the request.
+
+import type { PublicUser, Interest } from './user';
 
 export type Match = {
   id: string;
-  userId: string;
-  matchedUserId: string;
-  matchedUser: {
-    name: string;
-    avatarUrl: string;
-    major: string;
-    university: string;
-  };
-  sharedInterests: string[];
-  matchedAt: Date;
-  lastMessage?: {
-    preview: string;
-    sentAt: Date;
-  };
+  matchedUser: PublicUser;
+  sharedInterests: Interest[];
+  lastMessage: LastMessage | null;
+  matchedAt: string; // ISO 8601
+};
+
+export type LastMessage = {
+  id: string;
+  conversationId: string;
+  sender: PublicUser;
+  content: string;
+  readAt: string | null;
+  sentAt: string; // ISO 8601
 };
