@@ -56,6 +56,13 @@ module Api
           params.require(:user).permit(:email, :password)
         end
 
+        # Payload shape for both /auth/login and /auth/me.
+        #
+        # When `include_profile` is true, the profile is serialized via
+        # the canonical ProfileSerializer — the same one used by
+        # /api/v1/me/profile and /api/v1/profiles/:id. This keeps the
+        # profile shape identical across the API, so the frontend doesn't
+        # have to guess which endpoint returns which fields.
         def user_payload(user, include_profile: false)
           payload = {
             id:         user.id,
@@ -65,18 +72,11 @@ module Api
           }
 
           if include_profile && (profile = user.profile)
-            payload[:profile] = {
-              id:                 profile.id,
-              user_id:            profile.user_id,
-              university:         profile.university,
-              major:              profile.major,
-              tagline:            profile.tagline,
-              bio:                profile.bio,
-              looking_for:        profile.looking_for,
-              profile_visibility: profile.profile_visibility,
-              show_on_explore:    profile.show_on_explore,
-              age:                profile.age
-            }
+            payload[:profile] = ActiveModelSerializers::SerializableResource.new(
+              profile,
+              serializer: ProfileSerializer,
+              include_portfolio_links: true
+            ).as_json
           end
 
           payload
