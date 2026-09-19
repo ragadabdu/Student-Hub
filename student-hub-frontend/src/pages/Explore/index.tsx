@@ -99,7 +99,7 @@ export default function Explore() {
       {mode === 'people' ? (
         /* People Discovery */
         <div className="flex flex-col items-center">
-          {currentProfile && hasMoreProfiles ? (
+          {currentProfile ? (
             <>
               <div className="relative w-full max-w-md mx-auto">
                 {/* Background cards for depth */}
@@ -120,7 +120,7 @@ export default function Explore() {
                 onLike={handleSwipeRight}
                 onSuperLike={handleSuperLike}
                 canUndo={canUndo}
-                hasMore={hasMoreProfiles}
+                disabled={!currentProfile}
                 className="mt-6"
               />
             </>

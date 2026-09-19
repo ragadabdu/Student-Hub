@@ -7,18 +7,25 @@ import {
   type ReactNode,
 } from 'react';
 import { authService } from '../services/auth';
+import {
+  profilesService,
+  type UpdateProfilePayload,
+} from '../services/profiles';
+import { interestsService } from '../services/interests';
+import { skillsService } from '../services/skills';
+import {
+  portfolioLinksService,
+  type CreatePortfolioLinkPayload,
+} from '../services/portfolioLinks';
 import type { CurrentUser, Profile } from '../types/user';
 
-// What the AuthContext exposes to consumers.
-//
-// `isLoading` is true until the initial /auth/me resolves. Components
-// that need to know "is the user signed in?" should wait for
-// isLoading === false before deciding.
 export type AuthContextType = {
   user: CurrentUser | null;
   profile: Profile | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+
+  // Auth lifecycle
   login: (email: string, password: string) => Promise<void>;
   register: (
     email: string,
@@ -27,6 +34,14 @@ export type AuthContextType = {
   ) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
+
+  // Profile actions — these all update `profile` state so consumers
+  // re-render with the fresh data.
+  updateProfile: (payload: UpdateProfilePayload) => Promise<Profile>;
+  replaceInterests: (names: string[]) => Promise<void>;
+  replaceSkills: (names: string[]) => Promise<void>;
+  createPortfolioLink: (payload: CreatePortfolioLinkPayload) => Promise<void>;
+  deletePortfolioLink: (id: string) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -36,8 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Initial load: try to hydrate the session from the backend.
-  // If we have a session cookie, /auth/me returns the user; otherwise 401.
+  // Hydrate session on mount.
   useEffect(() => {
     let cancelled = false;
 
@@ -48,7 +62,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(u);
         setProfile(u.profile ?? null);
       } catch {
-        // 401 = not signed in. Anything else also leaves us anonymous.
         if (cancelled) return;
         setUser(null);
         setProfile(null);
@@ -64,12 +77,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const { user: u } = await authService.login({ email, password });
-    // After login, fetch the full /me to get the profile too.
+    await authService.login({ email, password });
     const { user: full } = await authService.me();
     setUser(full);
     setProfile(full.profile ?? null);
-    void u; // login response not needed beyond confirming success
   }, []);
 
   const register = useCallback(
@@ -97,6 +108,60 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile(full.profile ?? null);
   }, []);
 
+  // ------------------------------------------------------------------
+  // Profile actions
+  // ------------------------------------------------------------------
+
+  const updateProfile = useCallback(
+    async (payload: UpdateProfilePayload) => {
+      const updated = await profilesService.update(payload);
+      setProfile(updated);
+      // Also refresh `user.name` if it was updated, so the Sidebar etc.
+      // reflect it immediately.
+      if (payload.name !== undefined) {
+        setUser((prev) => (prev ? { ...prev, name: updated.user.name } : prev));
+      }
+      return updated;
+    },
+    [],
+  );
+
+  const replaceInterests = useCallback(async (names: string[]) => {
+    const interests = await interestsService.replace(names);
+    setProfile((prev) => (prev ? { ...prev, interests } : prev));
+  }, []);
+
+  const replaceSkills = useCallback(async (names: string[]) => {
+    const skills = await skillsService.replace(names);
+    setProfile((prev) => (prev ? { ...prev, skills } : prev));
+  }, []);
+
+  const createPortfolioLink = useCallback(
+    async (payload: CreatePortfolioLinkPayload) => {
+      const link = await portfolioLinksService.create(payload);
+      setProfile((prev) =>
+        prev
+          ? { ...prev, portfolioLinks: [...(prev.portfolioLinks ?? []), link] }
+          : prev,
+      );
+    },
+    [],
+  );
+
+  const deletePortfolioLink = useCallback(async (id: string) => {
+    await portfolioLinksService.delete(id);
+    setProfile((prev) =>
+      prev
+        ? {
+            ...prev,
+            portfolioLinks: (prev.portfolioLinks ?? []).filter(
+              (l) => l.id !== id,
+            ),
+          }
+        : prev,
+    );
+  }, []);
+
   const value: AuthContextType = {
     user,
     profile,
@@ -106,6 +171,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     register,
     logout,
     refresh,
+    updateProfile,
+    replaceInterests,
+    replaceSkills,
+    createPortfolioLink,
+    deletePortfolioLink,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

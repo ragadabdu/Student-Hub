@@ -1,135 +1,179 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { discoveryService } from '../services/discovery';
 import type { Profile } from '../types/user';
-import { profilesService } from '../services/profiles';
+
+const PAGE_SIZE = 20;
+const REFETCH_THRESHOLD = 5; // fetch next page when queue drops below this
 
 type SwipeDirection = 'left' | 'right' | 'super';
 
-type SwipeAction = {
-  type: 'pass' | 'like' | 'super_like';
-  profileId: string;
+export type LastAction = {
+  profile: Profile;
+  direction: SwipeDirection;
 };
 
 export function useSwipeDeck() {
-  const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [queue, setQueue] = useState<Profile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showMatch, setShowMatch] = useState(false);
   const [matchedProfile, setMatchedProfile] = useState<Profile | null>(null);
-  const [actionHistory, setActionHistory] = useState<SwipeAction[]>([]);
+  const [lastAction, setLastAction] = useState<LastAction | null>(null);
+  const [hasMore, setHasMore] = useState(true);
 
-  // Load profiles
-  const loadProfiles = useCallback(async () => {
+  // Track page and deduplicate by id — server-side dedup means new pages
+  // shouldn't duplicate, but belt-and-suspenders.
+  const pageRef = useRef(1);
+  const seenIdsRef = useRef<Set<string>>(new Set());
+  const fetchingRef = useRef(false);
+
+  const currentProfile = queue[0] ?? null;
+  const remainingProfiles = queue.length;
+
+  // ------------------------------------------------------------------
+  // Fetch a page of profiles
+  // ------------------------------------------------------------------
+  const fetchPage = useCallback(
+    async (page: number): Promise<Profile[]> => {
+      const { profiles } = await discoveryService.getProfiles({
+        page,
+        perPage: PAGE_SIZE,
+      });
+
+      // Dedupe: filter out anything we've already seen this session.
+      const fresh = profiles.filter((p) => !seenIdsRef.current.has(p.id));
+      fresh.forEach((p) => seenIdsRef.current.add(p.id));
+
+      return fresh;
+    },
+    [],
+  );
+
+  // ------------------------------------------------------------------
+  // Initial load + refresh
+  // ------------------------------------------------------------------
+  const loadInitial = useCallback(async () => {
     setIsLoading(true);
     setError(null);
+    setHasMore(true);
+    pageRef.current = 1;
+    seenIdsRef.current.clear();
+
     try {
-      const data = await profilesService.getDiscoveryProfiles();
-      setProfiles(data);
-      setCurrentIndex(0);
+      const profiles = await fetchPage(1);
+      setQueue(profiles);
+      if (profiles.length === 0) setHasMore(false);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load profiles. Please try again.';
-      setError(errorMessage);
-      console.error('Failed to load profiles:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load profiles');
+      setQueue([]);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [fetchPage]);
 
   useEffect(() => {
-    loadProfiles();
-  }, [loadProfiles]);
+    loadInitial();
+  }, [loadInitial]);
 
-  // Get current profile
-  const currentProfile = profiles[currentIndex] || null;
+  // ------------------------------------------------------------------
+  // Background refetch when queue is running low
+  // ------------------------------------------------------------------
+  useEffect(() => {
+    if (isLoading || !hasMore || fetchingRef.current) return;
+    if (queue.length > REFETCH_THRESHOLD) return;
 
-  // Check if there are more profiles
-  const hasMoreProfiles = currentIndex < profiles.length - 1;
+    fetchingRef.current = true;
+    const nextPage = pageRef.current + 1;
 
-  // Handle swipe action
-  const handleSwipe = useCallback(async (direction: SwipeDirection) => {
-    if (!currentProfile) return;
+    fetchPage(nextPage)
+      .then((fresh) => {
+        if (fresh.length === 0) {
+          setHasMore(false);
+        } else {
+          pageRef.current = nextPage;
+          setQueue((prev) => [...prev, ...fresh]);
+        }
+      })
+      .catch((err) => {
+        // Non-fatal — the user still has profiles to swipe on.
+        console.error('Background fetch failed:', err);
+      })
+      .finally(() => {
+        fetchingRef.current = false;
+      });
+  }, [queue.length, isLoading, hasMore, fetchPage]);
 
-    const action: SwipeAction = {
-      type: direction === 'left' ? 'pass' : direction === 'right' ? 'like' : 'super_like',
-      profileId: currentProfile.id,
-    };
+  // ------------------------------------------------------------------
+  // Actions
+  // ------------------------------------------------------------------
 
-    // Add to history (for undo)
-    setActionHistory(prev => [...prev, action]);
+  // Optimistically pop the top of the queue, call the API, restore on error.
+  const performAction = useCallback(
+    async (direction: SwipeDirection) => {
+      const profile = queue[0];
+      if (!profile) return;
 
-    // Perform the action
-    try {
-      let result;
-      switch (direction) {
-        case 'left':
-          result = await profilesService.passProfile(currentProfile.id);
-          break;
-        case 'right':
-          result = await profilesService.likeProfile(currentProfile.id);
-          if (result.matched) {
-            setMatchedProfile(currentProfile);
-            setShowMatch(true);
-          }
-          break;
-        case 'super':
-          result = await profilesService.superLikeProfile(currentProfile.id);
-          if (result.matched) {
-            setMatchedProfile(currentProfile);
-            setShowMatch(true);
-          }
-          break;
+      // Pop it optimistically
+      setQueue((prev) => prev.slice(1));
+      setLastAction({ profile, direction });
+
+      try {
+        const response =
+          direction === 'left'
+            ? await discoveryService.pass(profile.userId)
+            : direction === 'right'
+            ? await discoveryService.connect(profile.userId)
+            : await discoveryService.superConnect(profile.userId);
+
+        if (response.matchCreated) {
+          setMatchedProfile(profile);
+          setShowMatch(true);
+        }
+      } catch (err) {
+        // Restore the profile at the top of the queue and surface the error.
+        setQueue((prev) => [profile, ...prev]);
+        setLastAction(null);
+        const message =
+          err instanceof Error ? err.message : 'Something went wrong';
+        setError(message);
+        // Auto-clear the error after a few seconds
+        setTimeout(() => setError(null), 3000);
       }
-    } catch (err) {
-      // Log the error
-      console.error('Swipe action failed:', err);
-      
-      // Remove from history since it failed
-      setActionHistory(prev => prev.slice(0, -1));
-      
-      // Set error state
-      const errorMessage = err instanceof Error ? err.message : 'Action failed';
-      setError(errorMessage);
-      
-      // Don't advance to next profile
-      return;
-    }
+    },
+    [queue],
+  );
 
-    // Move to next profile on success
-    setCurrentIndex(prev => prev + 1);
-  }, [currentProfile]);
+  const handleSwipe = useCallback(
+    (direction: SwipeDirection) => performAction(direction),
+    [performAction],
+  );
 
-  // Undo last action
-  const undoLastAction = useCallback(async () => {
-    if (actionHistory.length === 0 || currentIndex === 0) return;
-    
-    // Remove the action from history
-    setActionHistory(prev => prev.slice(0, -1));
-    
-    // Go back to previous profile
-    setCurrentIndex(prev => prev - 1);
+  const undoLastAction = useCallback(() => {
+    if (!lastAction) return;
+    // Put the profile back at the top of the queue.
+    setQueue((prev) => [lastAction.profile, ...prev]);
+    setLastAction(null);
+    // Note: this doesn't undo the server-side action. The connection
+    // record remains. On next refresh, the profile won't reappear.
+  }, [lastAction]);
 
-    // TODO: In the future, we might want to call an API to undo the like/pass
-    // DELETE /api/v1/likes/:id or similar
-  }, [actionHistory, currentIndex]);
-
-  // Reset deck
-  const resetDeck = useCallback(() => {
-    loadProfiles();
-    setShowMatch(false);
-    setMatchedProfile(null);
-    setActionHistory([]);
-    setError(null);
-  }, [loadProfiles]);
-
-  // Dismiss match overlay
   const dismissMatch = useCallback(() => {
     setShowMatch(false);
     setMatchedProfile(null);
   }, []);
 
+  const resetDeck = useCallback(() => {
+    loadInitial();
+  }, [loadInitial]);
+
+  // ------------------------------------------------------------------
+  // Derived state
+  // ------------------------------------------------------------------
+  const canUndo = lastAction !== null;
+
   return {
     currentProfile,
-    hasMoreProfiles,
+    hasMoreProfiles: hasMore,
     isLoading,
     error,
     showMatch,
@@ -138,8 +182,7 @@ export function useSwipeDeck() {
     undoLastAction,
     resetDeck,
     dismissMatch,
-    canUndo: actionHistory.length > 0 && currentIndex > 0,
-    totalProfiles: profiles.length,
-    remainingProfiles: profiles.length - currentIndex - 1,
+    canUndo,
+    remainingProfiles,
   };
 }

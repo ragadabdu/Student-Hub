@@ -1,25 +1,33 @@
-import type { PortfolioLink } from '../../../types/user';
-import { Globe, Link, Plus } from 'lucide-react';
+import type { PortfolioLink, LinkType } from '../../../types/user';
+import { Globe, Link as LinkIcon, Plus } from 'lucide-react';
 import { FaGithub, FaLinkedin, FaTwitter } from 'react-icons/fa';
 
 interface PortfolioLinksProps {
-  links: PortfolioLink[];
+  links?: PortfolioLink[];
   isEditable?: boolean;
   onAddLink?: () => void;
   onRemoveLink?: (id: string) => void;
   className?: string;
 }
 
-const linkIcons = {
-  GitHub: FaGithub,
-  LinkedIn: FaLinkedin,
-  Website: Globe,
-  Twitter: FaTwitter,
-  Other: Link,
+const linkIcons: Record<LinkType, typeof Globe> = {
+  github: FaGithub as unknown as typeof Globe,
+  linkedin: FaLinkedin as unknown as typeof Globe,
+  website: Globe,
+  twitter: FaTwitter as unknown as typeof Globe,
+  other: LinkIcon,
+};
+
+const linkLabels: Record<LinkType, string> = {
+  github: 'GitHub',
+  linkedin: 'LinkedIn',
+  website: 'Website',
+  twitter: 'Twitter',
+  other: 'Link',
 };
 
 export function PortfolioLinks({
-  links,
+  links = [],
   isEditable = false,
   onAddLink,
   onRemoveLink,
@@ -36,7 +44,8 @@ export function PortfolioLinks({
   return (
     <div className={`space-y-2 ${className}`}>
       {links.map((link) => {
-        const Icon = linkIcons[link.label] || Link;
+        const Icon = linkIcons[link.linkType] ?? LinkIcon;
+        const displayLabel = link.title || linkLabels[link.linkType];
 
         return (
           <div key={link.id} className="flex items-center gap-2">
@@ -47,14 +56,14 @@ export function PortfolioLinks({
               className="flex items-center gap-2.5 text-text-secondary hover:text-primary transition-colors py-1.5 px-3 rounded-lg hover:bg-gray-50"
             >
               <Icon className="w-4 h-4" />
-              <span>{link.label}</span>
+              <span>{displayLabel}</span>
             </a>
 
             {isEditable && onRemoveLink && (
               <button
                 onClick={() => onRemoveLink(link.id)}
                 className="text-text-secondary hover:text-red-500 transition-colors"
-                aria-label={`Remove ${link.label}`}
+                aria-label={`Remove ${displayLabel}`}
               >
                 ×
               </button>

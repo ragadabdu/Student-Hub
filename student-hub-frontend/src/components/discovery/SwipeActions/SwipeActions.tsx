@@ -1,10 +1,5 @@
 import { Button } from '../../ui/Button/Button';
-import { 
-  RotateCcw, 
-  X, 
-  Heart, 
-  Sparkles
-} from 'lucide-react';
+import { RotateCcw, X, Heart, Sparkles } from 'lucide-react';
 
 interface SwipeActionsProps {
   onUndo: () => void;
@@ -12,7 +7,9 @@ interface SwipeActionsProps {
   onLike: () => void;
   onSuperLike: () => void;
   canUndo: boolean;
-  hasMore: boolean;
+  // `disabled` disables all actions — used when there's no current profile.
+  // Optional; defaults to false.
+  disabled?: boolean;
   className?: string;
 }
 
@@ -22,7 +19,7 @@ export function SwipeActions({
   onLike,
   onSuperLike,
   canUndo,
-  hasMore,
+  disabled = false,
   className = '',
 }: SwipeActionsProps) {
   return (
@@ -44,7 +41,7 @@ export function SwipeActions({
         variant="outline"
         size="lg"
         onClick={onPass}
-        disabled={!hasMore}
+        disabled={disabled}
         aria-label="Pass"
         className="w-16 h-16 rounded-full border-2 border-red-300 text-red-500 hover:bg-red-50 hover:border-red-500 hover:text-red-600 bg-white shadow-md"
       >
@@ -56,7 +53,7 @@ export function SwipeActions({
         variant="primary"
         size="lg"
         onClick={onLike}
-        disabled={!hasMore}
+        disabled={disabled}
         aria-label="Connect"
         className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-secondary hover:shadow-lg hover:scale-105 transition-transform"
       >
@@ -68,7 +65,7 @@ export function SwipeActions({
         variant="secondary"
         size="lg"
         onClick={onSuperLike}
-        disabled={!hasMore}
+        disabled={disabled}
         aria-label="Super Connect"
         className="w-14 h-14 rounded-full bg-gradient-to-br from-yellow-400 to-orange-400 text-white hover:shadow-lg hover:scale-105 transition-transform"
       >

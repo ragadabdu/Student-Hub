@@ -18,7 +18,7 @@ module Api
           .discoverable
           .where.not(user_id: current_user.id)
           .where.not(user_id: acted_on_ids)
-          .includes(user: [:interests, :skills, :portfolio_links])
+          .includes(user: [:interests, :skills])
           .order(created_at: :desc)
 
         result = Pagination.paginate(

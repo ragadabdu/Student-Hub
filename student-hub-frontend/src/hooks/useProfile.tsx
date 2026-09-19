@@ -1,85 +1,74 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import type { UpdateProfilePayload } from '../services/profiles';
 import type { Profile } from '../types/user';
-import { profilesService } from '../services/profiles';
 
 type ProfileMode = 'view' | 'edit';
 
-export function useProfile(profileId?: string) {
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+// Thin wrapper around AuthContext's profile state.
+// Adds UI-only state (edit mode, saving indicator, success flag).
+export function useProfile() {
+  const {
+    profile,
+    isLoading,
+    updateProfile,
+    replaceInterests,
+    replaceSkills,
+  } = useAuth();
+
   const [mode, setMode] = useState<ProfileMode>('view');
   const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // Load profile
-  const loadProfile = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      let data;
-      if (profileId) {
-        data = await profilesService.getProfile(profileId);
-      } else {
-        // Load current user's profile
-        data = await profilesService.getCurrentUserProfile();
-      }
-      
-      if (!data) {
-        throw new Error('Profile not found');
-      }
-      
-      setProfile(data);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load profile';
-      setError(errorMessage);
-      console.error('Failed to load profile:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [profileId]);
-
-  useEffect(() => {
-    loadProfile();
-  }, [loadProfile]);
-
-  // Edit profile
   const startEditing = useCallback(() => {
     setMode('edit');
     setSaveSuccess(false);
+    setError(null);
   }, []);
 
   const cancelEditing = useCallback(() => {
     setMode('view');
-    // Reload to reset changes
-    loadProfile();
-  }, [loadProfile]);
-
-  // Save profile
-  const saveProfile = useCallback(async (updates: Partial<Profile>) => {
-    if (!profile) return;
-    
-    setIsSaving(true);
     setError(null);
-    
-    try {
-      const updated = await profilesService.updateProfile(profile.id, updates);
-      setProfile(updated);
-      setMode('view');
-      setSaveSuccess(true);
-      
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSaveSuccess(false);
-      }, 3000);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to save profile';
-      setError(errorMessage);
-      console.error('Failed to save profile:', err);
-    } finally {
-      setIsSaving(false);
-    }
-  }, [profile]);
+  }, []);
+
+  const saveProfile = useCallback(
+    async (
+      payload: UpdateProfilePayload,
+      interestNames: string[],
+      skillNames: string[],
+    ): Promise<Profile | null> => {
+      setIsSaving(true);
+      setError(null);
+      setSaveSuccess(false);
+
+      try {
+        // Order matters slightly: we update the profile first (which may
+        // include a name change), then sync interests and skills.
+        // If any call fails, the earlier ones remain applied — the backend
+        // doesn't span these in a transaction because they're separate
+        // endpoints. This is a known limitation of the HTTP-per-resource
+        // design. If we needed strict atomicity, we'd add a composite
+        // endpoint. For MVP, this is acceptable.
+        await updateProfile(payload);
+        await replaceInterests(interestNames);
+        await replaceSkills(skillNames);
+
+        setMode('view');
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 3000);
+        return profile;
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : 'Failed to save profile';
+        setError(message);
+        return null;
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [updateProfile, replaceInterests, replaceSkills, profile],
+  );
 
   return {
     profile,
@@ -91,6 +80,5 @@ export function useProfile(profileId?: string) {
     startEditing,
     cancelEditing,
     saveProfile,
-    loadProfile,
   };
 }
