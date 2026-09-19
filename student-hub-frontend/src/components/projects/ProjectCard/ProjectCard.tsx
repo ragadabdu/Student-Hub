@@ -1,16 +1,17 @@
 import type { Project } from '../../../types/project';
+import { Avatar } from '../../ui/Avatar/Avatar';
 import { Badge } from '../../ui/Badge/Badge';
-import { Button } from '../../ui/Button/Button';
-import { Users, User, Calendar, Sparkles } from 'lucide-react';
+import { Users, Calendar, Sparkles, ExternalLink } from 'lucide-react';
+import { FaGithub } from 'react-icons/fa';
 
 interface ProjectCardProps {
   project: Project;
-  onExpressInterest?: (projectId: string) => void;
-  isExpressingInterest?: boolean;
   className?: string;
 }
 
-const categoryLabels = {
+type BadgeVariant = 'primary' | 'green' | 'pink' | 'yellow' | 'gray' | 'blue';
+
+const categoryLabels: Record<Project['category'], string> = {
   web_dev: 'Web Dev',
   ai_ml: 'AI / ML',
   design: 'Design',
@@ -19,48 +20,46 @@ const categoryLabels = {
   other: 'Other',
 };
 
-const categoryColors = {
+const categoryColors: Record<Project['category'], BadgeVariant> = {
   web_dev: 'primary',
   ai_ml: 'green',
   design: 'pink',
   mobile: 'yellow',
   business: 'blue',
   other: 'gray',
-} as const;
+};
 
-export function ProjectCard({ 
-  project, 
-  onExpressInterest, 
-  isExpressingInterest = false,
-  className = '' 
-}: ProjectCardProps) {
-  const handleInterest = () => {
-    if (onExpressInterest) {
-      onExpressInterest(project.id);
-    }
-  };
+export function ProjectCard({ project, className = '' }: ProjectCardProps) {
+  const ownerName = project.owner.name ?? 'Unnamed Student';
 
-  const formattedDate = project.createdAt.toLocaleDateString('en-US', {
+  const formattedDate = new Date(project.createdAt).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
   });
 
   return (
-    <div className={`bg-white rounded-2xl shadow-sm border border-border hover:shadow-md transition-all duration-200 p-6 ${className}`}>
+    <div
+      className={`bg-white rounded-2xl shadow-sm border border-border hover:shadow-md transition-all duration-200 p-6 flex flex-col ${className}`}
+    >
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           <h3 className="text-lg font-semibold text-text truncate">
             {project.title}
           </h3>
-          <div className="flex items-center gap-3 mt-1 text-sm text-text-secondary">
-            <span className="flex items-center gap-1">
-              <User className="w-4 h-4" />
-              {project.ownerName}
+          <div className="flex items-center gap-3 mt-2 text-sm text-text-secondary">
+            <span className="flex items-center gap-1.5">
+              <Avatar
+                src={project.owner.avatarUrl ?? undefined}
+                alt={ownerName}
+                size="sm"
+                className="w-5 h-5"
+              />
+              {ownerName}
             </span>
             <span className="flex items-center gap-1">
-              <Calendar className="w-4 h-4" />
+              <Calendar className="w-3.5 h-3.5" />
               {formattedDate}
             </span>
           </div>
@@ -71,50 +70,63 @@ export function ProjectCard({
       </div>
 
       {/* Description */}
-      <p className="text-text-secondary text-sm mt-3 line-clamp-2">
-        {project.description}
-      </p>
+      {project.description && (
+        <p className="text-text-secondary text-sm mt-3 line-clamp-2">
+          {project.description}
+        </p>
+      )}
 
-      {/* Tags */}
-      <div className="flex flex-wrap gap-2 mt-3">
-        {project.tags.map((tag) => (
-          <Badge key={tag} variant="gray">
-            {tag}
-          </Badge>
-        ))}
-      </div>
+      {/* Skills */}
+      {project.skills.length > 0 && (
+        <div className="flex flex-wrap gap-2 mt-3">
+          {project.skills.map((skill) => (
+            <Badge key={skill.id} variant="gray">
+              {skill.name}
+            </Badge>
+          ))}
+        </div>
+      )}
 
-      {/* Team & Looking For */}
-      <div className="mt-4 pt-4 border-t border-border">
+      {/* Footer */}
+      <div className="mt-4 pt-4 border-t border-border flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-4 text-sm">
-          <span className="flex items-center gap-1.5 text-text-secondary">
-            <Users className="w-4 h-4" />
-            {project.teamSize} member{project.teamSize !== 1 ? 's' : ''}
-          </span>
-          {project.lookingFor.length > 0 && (
-            <span className="flex items-center gap-1.5 text-primary">
-              <Sparkles className="w-4 h-4" />
-              Looking for: {project.lookingFor.join(', ')}
+          {project.teamSize !== null && (
+            <span className="flex items-center gap-1.5 text-text-secondary">
+              <Users className="w-4 h-4" />
+              {project.teamSize} member{project.teamSize !== 1 ? 's' : ''}
             </span>
           )}
+          <span className="flex items-center gap-1.5 text-primary">
+            <Sparkles className="w-4 h-4" />
+            {project.lookingFor.replace(/_/g, ' ')}
+          </span>
         </div>
-      </div>
 
-      {/* Actions */}
-      <div className="mt-4 flex gap-3">
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={handleInterest}
-          isLoading={isExpressingInterest}
-          disabled={isExpressingInterest}
-          className="flex-1"
-        >
-          Express Interest
-        </Button>
-        <Button variant="outline" size="sm">
-          View Details
-        </Button>
+        {/* External links */}
+        <div className="flex items-center gap-2">
+          {project.githubUrl && (
+            <a
+              href={project.githubUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-text-secondary hover:text-primary transition-colors"
+              aria-label="GitHub repository"
+            >
+              <FaGithub className="w-4 h-4" />
+            </a>
+          )}
+          {project.liveDemoUrl && (
+            <a
+              href={project.liveDemoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-text-secondary hover:text-primary transition-colors"
+              aria-label="Live demo"
+            >
+              <ExternalLink className="w-4 h-4" />
+            </a>
+          )}
+        </div>
       </div>
     </div>
   );
