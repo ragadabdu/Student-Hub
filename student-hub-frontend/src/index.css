@@ -34,3 +34,84 @@
     @apply text-2xl font-semibold;
   }
 }
+
+/* ----------------------------------------------------------------------
+ * Dark theme.
+ *
+ * We use class-based dark mode (see tailwind.config.js — `darkMode: 'class'`).
+ * The `dark` class is applied to <html> by ThemeContext based on the user's
+ * `settings.preferences.theme`.
+ *
+ * These are minimal overrides that demonstrate the theme works. A full dark
+ * theme would add `dark:` variants directly to components. For now, we
+ * override the most-used base classes.
+ * -------------------------------------------------------------------- */
+
+html.dark body {
+  background-color: #0f172a; /* slate-900 */
+  color: #e2e8f0;            /* slate-200 */
+}
+
+html.dark .bg-white {
+  background-color: #1e293b !important; /* slate-800 */
+}
+
+html.dark .bg-background {
+  background-color: #0f172a !important;
+}
+
+html.dark .bg-gray-50 {
+  background-color: #1e293b !important;
+}
+
+html.dark .bg-gray-100 {
+  background-color: #334155 !important; /* slate-700 */
+}
+
+html.dark .bg-gray-200 {
+  background-color: #334155 !important;
+}
+
+html.dark .border-border {
+  border-color: #334155 !important;
+}
+
+html.dark .text-navy {
+  color: #e2e8f0 !important;
+}
+
+html.dark .text-text {
+  color: #e2e8f0 !important;
+}
+
+html.dark .text-text-secondary {
+  color: #94a3b8 !important; /* slate-400 */
+}
+
+html.dark .hover\:bg-gray-50:hover {
+  background-color: #334155 !important;
+}
+
+html.dark .hover\:bg-gray-100:hover {
+  background-color: #334155 !important;
+}
+
+html.dark input,
+html.dark select,
+html.dark textarea {
+  background-color: #1e293b !important;
+  color: #e2e8f0 !important;
+  border-color: #334155 !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #64748b !important;
+}
+
+/* Slightly darker shadow for cards in dark mode */
+html.dark .shadow-sm,
+html.dark .shadow-md,
+html.dark .shadow-lg {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
+}

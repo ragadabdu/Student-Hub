@@ -1,4 +1,20 @@
-export interface UserSettings {
+// Settings service — real API calls.
+//
+// Backend reference (see docs/api.md):
+//   GET   /me/settings  → aggregated settings
+//   PATCH /me/settings  → partial update
+//
+// The response aggregates data from two tables (user_settings and
+// profiles). The API presents them as one nested object.
+//
+// The API client converts snake_case ↔ camelCase transparently.
+
+import { api } from './api';
+
+export type ProfileVisibility = 'public_profile' | 'private_profile';
+export type Theme = 'system' | 'light' | 'dark';
+
+export type Settings = {
   notifications: {
     email: boolean;
     push: boolean;
@@ -9,59 +25,35 @@ export interface UserSettings {
   privacy: {
     showOnlineStatus: boolean;
     showLastActive: boolean;
-    profileVisibility: 'public' | 'connections' | 'private';
+    profileVisibility: ProfileVisibility;
+    showOnExplore: boolean;
   };
   preferences: {
-    theme: 'light' | 'dark' | 'system';
+    theme: Theme;
     language: string;
     discoveryRadius: number;
-    showMeOnExplore: boolean;
   };
-}
-
-// Default settings
-const defaultSettings: UserSettings = {
-  notifications: {
-    email: true,
-    push: true,
-    matches: true,
-    messages: true,
-    projectUpdates: true,
-  },
-  privacy: {
-    showOnlineStatus: true,
-    showLastActive: true,
-    profileVisibility: 'public',
-  },
-  preferences: {
-    theme: 'light',
-    language: 'en',
-    discoveryRadius: 50,
-    showMeOnExplore: true,
-  },
 };
 
-// Mock current settings
-let currentSettings: UserSettings = { ...defaultSettings };
+// Deep partial for updates.
+export type SettingsUpdate = {
+  notifications?: Partial<Settings['notifications']>;
+  privacy?: Partial<Settings['privacy']>;
+  preferences?: Partial<Settings['preferences']>;
+};
+
+type SettingsResponse = { settings: Settings };
 
 export const settingsService = {
-  // Get user settings
-  getSettings: async (): Promise<UserSettings> => {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    return { ...currentSettings };
+  async get(): Promise<Settings> {
+    const { settings } = await api.get<SettingsResponse>('/me/settings');
+    return settings;
   },
 
-  // Update user settings
-  updateSettings: async (updates: Partial<UserSettings>): Promise<UserSettings> => {
-    await new Promise(resolve => setTimeout(resolve, 400));
-    currentSettings = { ...currentSettings, ...updates };
-    return { ...currentSettings };
-  },
-
-  // Reset to default settings
-  resetSettings: async (): Promise<UserSettings> => {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    currentSettings = { ...defaultSettings };
-    return { ...currentSettings };
+  async update(patch: SettingsUpdate): Promise<Settings> {
+    const { settings } = await api.patch<SettingsResponse>('/me/settings', {
+      settings: patch,
+    });
+    return settings;
   },
 };

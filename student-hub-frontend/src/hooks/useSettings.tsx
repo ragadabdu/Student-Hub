@@ -1,85 +1,83 @@
-import { useState, useEffect, useCallback } from 'react';
-import { type UserSettings, settingsService } from '../services/settings';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  settingsService,
+  type Settings,
+  type SettingsUpdate,
+} from '../services/settings';
 
 export function useSettings() {
-  const [settings, setSettings] = useState<UserSettings | null>(null);
+  const [settings, setSettings] = useState<Settings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [transientError, setTransientError] = useState<string | null>(null);
 
-  const loadSettings = useCallback(async () => {
+  // Track in-flight updates so we can display a spinner and ignore
+  // stale responses.
+  const requestIdRef = useRef(0);
+
+  const load = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await settingsService.getSettings();
+      const data = await settingsService.get();
       setSettings(data);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load settings';
-      setError(errorMessage);
-      console.error('Failed to load settings:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load settings');
+      setSettings(null);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    loadSettings();
-  }, [loadSettings]);
+    load();
+  }, [load]);
 
-  const updateSettings = useCallback(async (updates: Partial<UserSettings>) => {
-    if (!settings) return;
-    
-    setIsSaving(true);
-    setError(null);
-    setSaveSuccess(false);
-    
-    try {
-      const updated = await settingsService.updateSettings(updates);
-      setSettings(updated);
-      setSaveSuccess(true);
-      
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSaveSuccess(false);
-      }, 3000);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to save settings';
-      setError(errorMessage);
-      console.error('Failed to save settings:', err);
-    } finally {
-      setIsSaving(false);
-    }
-  }, [settings]);
+  // Update a section of settings. Optimistic: applies the change locally
+  // before the server confirms, and reverts on failure.
+  const update = useCallback(
+    async (patch: SettingsUpdate): Promise<boolean> => {
+      if (!settings) return false;
 
-  const resetSettings = useCallback(async () => {
-    setIsSaving(true);
-    setError(null);
-    try {
-      const reset = await settingsService.resetSettings();
-      setSettings(reset);
-      setSaveSuccess(true);
-      
-      setTimeout(() => {
-        setSaveSuccess(false);
-      }, 3000);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to reset settings';
-      setError(errorMessage);
-      console.error('Failed to reset settings:', err);
-    } finally {
-      setIsSaving(false);
-    }
-  }, []);
+      const snapshot = settings;
+      const optimistic: Settings = {
+        notifications: { ...settings.notifications, ...(patch.notifications ?? {}) },
+        privacy: { ...settings.privacy, ...(patch.privacy ?? {}) },
+        preferences: { ...settings.preferences, ...(patch.preferences ?? {}) },
+      };
+
+      setSettings(optimistic);
+      setTransientError(null);
+
+      const myId = ++requestIdRef.current;
+      try {
+        const confirmed = await settingsService.update(patch);
+        // Only apply if this is the most recent update.
+        if (myId === requestIdRef.current) {
+          setSettings(confirmed);
+        }
+        return true;
+      } catch (err) {
+        if (myId === requestIdRef.current) {
+          // Revert to pre-update state and surface a transient error.
+          setSettings(snapshot);
+          const message =
+            err instanceof Error ? err.message : 'Failed to save settings';
+          setTransientError(message);
+          setTimeout(() => setTransientError(null), 4000);
+        }
+        return false;
+      }
+    },
+    [settings],
+  );
 
   return {
     settings,
     isLoading,
-    isSaving,
     error,
-    saveSuccess,
-    loadSettings,
-    updateSettings,
-    resetSettings,
+    transientError,
+    update,
+    reload: load,
   };
 }
