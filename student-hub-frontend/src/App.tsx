@@ -60,6 +60,7 @@ function AppShell() {
             <Route path="/projects" element={<Projects />} />
             <Route path="/matches" element={<Matches />} />
             <Route path="/messages" element={<Messages />} />
+            <Route path="/messages/:conversationId" element={<Messages />} />
             <Route path="/settings" element={<Settings />} />
           </Routes>
         </main>

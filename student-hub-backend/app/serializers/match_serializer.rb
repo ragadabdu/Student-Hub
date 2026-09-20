@@ -5,7 +5,8 @@ class MatchSerializer < ActiveModel::Serializer
              :matched_user,
              :shared_interests,
              :last_message,
-             :matched_at
+             :matched_at,
+             :conversation_id
 
   def matched_user
     other = object.other_user_for(viewer)
@@ -23,9 +24,6 @@ class MatchSerializer < ActiveModel::Serializer
   end
 
   def last_message
-    # Avoid N+1: if the conversation/messages weren't eager-loaded, this
-    # will query per match. Callers should `includes(conversation: :messages)`
-    # when listing many matches.
     last = object.conversation&.last_message
     return nil unless last
 
@@ -37,6 +35,12 @@ class MatchSerializer < ActiveModel::Serializer
 
   def matched_at
     object.created_at.iso8601
+  end
+
+  # Exposes the match's conversation id so the frontend can navigate
+  # directly to the conversation from a match card.
+  def conversation_id
+    object.conversation&.id
   end
 
   private

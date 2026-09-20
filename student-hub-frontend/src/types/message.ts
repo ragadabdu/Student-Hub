@@ -1,19 +1,25 @@
+// Messaging types — match backend serializers.
+//
+// Backend reference:
+//   ConversationSerializer (app/serializers/conversation_serializer.rb)
+//   MessageSerializer (app/serializers/message_serializer.rb)
+
+import type { PublicUser } from './user';
+
 export type Message = {
   id: string;
   conversationId: string;
-  senderId: string;
+  sender: PublicUser;
   content: string;
-  sentAt: Date;
-  readAt?: Date;
+  readAt: string | null;
+  sentAt: string; // ISO 8601
 };
 
 export type Conversation = {
   id: string;
-  participants: {
-    id: string;
-    name: string;
-    avatarUrl: string;
-  }[];
-  lastMessage?: Message;
-  messages: Message[];
+  matchId: string;
+  otherUser: PublicUser;
+  lastMessage: Message | null;
+  unreadCount: number;
+  createdAt: string; // ISO 8601
 };

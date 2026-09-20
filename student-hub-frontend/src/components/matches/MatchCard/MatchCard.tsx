@@ -42,8 +42,11 @@ export function MatchCard({
   };
 
   const handleOpenConversation = () => {
-    // FI.6 will wire this to a specific conversation route.
-    navigate('/messages');
+    if (match.conversationId) {
+      navigate(`/messages/${match.conversationId}`);
+    } else {
+      navigate('/messages');
+    }
   };
 
   return (

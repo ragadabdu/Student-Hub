@@ -1,10 +1,4 @@
 // Match type — matches the backend MatchSerializer.
-//
-// Backend reference: app/serializers/match_serializer.rb
-//
-// A match is normalized as one row per pair of users. The `matchedUser`
-// is the OTHER user from the perspective of the requesting user — the
-// backend computes it based on who is making the request.
 
 import type { PublicUser, Interest } from './user';
 
@@ -14,6 +8,7 @@ export type Match = {
   sharedInterests: Interest[];
   lastMessage: LastMessage | null;
   matchedAt: string; // ISO 8601
+  conversationId: string | null;
 };
 
 export type LastMessage = {
@@ -22,5 +17,5 @@ export type LastMessage = {
   sender: PublicUser;
   content: string;
   readAt: string | null;
-  sentAt: string; // ISO 8601
+  sentAt: string;
 };

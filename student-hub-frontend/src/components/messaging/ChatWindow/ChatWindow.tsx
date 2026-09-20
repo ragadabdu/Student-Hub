@@ -1,47 +1,70 @@
 import { useState, useRef, useEffect } from 'react';
-import type { Conversation } from '../../../types/message';
+import type { Conversation, Message } from '../../../types/message';
+import { useAuth } from '../../../context/AuthContext';
 import { Avatar } from '../../ui/Avatar/Avatar';
 import { Button } from '../../ui/Button/Button';
 import { Send, ArrowLeft } from 'lucide-react';
 
 interface ChatWindowProps {
   conversation: Conversation;
+  messages: Message[];
   onSendMessage: (content: string) => Promise<boolean>;
   onBack: () => void;
   isSending: boolean;
-  getOtherParticipant: (conv: Conversation) => { id: string; name: string; avatarUrl: string };
   className?: string;
+}
+
+function formatTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+}
+
+function formatDate(iso: string): string {
+  const date = new Date(iso);
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  if (date.toDateString() === today.toDateString()) return 'Today';
+  if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
 }
 
 export function ChatWindow({
   conversation,
+  messages,
   onSendMessage,
   onBack,
   isSending,
-  getOtherParticipant,
   className = '',
 }: ChatWindowProps) {
+  const { user } = useAuth();
   const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const other = getOtherParticipant(conversation);
+  const other = conversation.otherUser;
+  const otherName = other.name ?? 'Unnamed Student';
 
-  const scrollToBottom = () => {
-    if (messagesEndRef.current && typeof messagesEndRef.current.scrollIntoView === 'function') {
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (
+      messagesEndRef.current &&
+      typeof messagesEndRef.current.scrollIntoView === 'function'
+    ) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [conversation.messages]);
+  }, [messages]);
 
   const handleSend = async () => {
     if (!newMessage.trim() || isSending) return;
-
     const success = await onSendMessage(newMessage.trim());
-    if (success) {
-      setNewMessage('');
-    }
+    if (success) setNewMessage('');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -51,48 +74,23 @@ export function ChatWindow({
     }
   };
 
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    });
-  };
-
-  const formatDate = (date: Date) => {
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    if (date.toDateString() === today.toDateString()) {
-      return 'Today';
-    } else if (date.toDateString() === yesterday.toDateString()) {
-      return 'Yesterday';
-    } else {
-      return date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      });
-    }
-  };
-
-  // Group messages by date
-  const groupedMessages: { date: string; messages: typeof conversation.messages }[] = [];
+  // Group by date
+  const grouped: { date: string; messages: Message[] }[] = [];
   let currentDate = '';
-
-  conversation.messages.forEach((msg) => {
+  messages.forEach((msg) => {
     const dateStr = formatDate(msg.sentAt);
     if (dateStr !== currentDate) {
       currentDate = dateStr;
-      groupedMessages.push({ date: dateStr, messages: [msg] });
+      grouped.push({ date: dateStr, messages: [msg] });
     } else {
-      groupedMessages[groupedMessages.length - 1].messages.push(msg);
+      grouped[grouped.length - 1].messages.push(msg);
     }
   });
 
   return (
-    <div className={`flex flex-col h-full bg-white rounded-2xl shadow-sm border border-border ${className}`}>
+    <div
+      className={`flex flex-col h-full bg-white rounded-2xl shadow-sm border border-border ${className}`}
+    >
       {/* Header */}
       <div className="flex items-center gap-3 p-4 border-b border-border">
         <button
@@ -102,25 +100,39 @@ export function ChatWindow({
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <Avatar src={other.avatarUrl} alt={other.name} size="sm" />
+        <Avatar
+          src={other.avatarUrl ?? undefined}
+          alt={otherName}
+          size="sm"
+        />
         <div>
-          <h4 className="font-semibold text-text">{other.name}</h4>
-          <p className="text-xs text-text-secondary">Online</p>
+          <h4 className="font-semibold text-text">{otherName}</h4>
+          <p className="text-xs text-text-secondary">
+            {messages.length} message{messages.length !== 1 ? 's' : ''}
+          </p>
         </div>
       </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {groupedMessages.map((group, idx) => (
+        {messages.length === 0 && (
+          <div className="text-center py-8">
+            <p className="text-text-secondary text-sm italic">
+              No messages yet. Say hello!
+            </p>
+          </div>
+        )}
+
+        {grouped.map((group, idx) => (
           <div key={idx}>
-            <div className="flex justify-center">
+            <div className="flex justify-center mb-3">
               <span className="text-xs text-text-secondary bg-gray-100 px-3 py-1 rounded-full">
                 {group.date}
               </span>
             </div>
-            <div className="space-y-3 mt-3">
+            <div className="space-y-3">
               {group.messages.map((msg) => {
-                const isOwn = msg.senderId === '1';
+                const isOwn = msg.sender.id === user?.id;
                 return (
                   <div
                     key={msg.id}
@@ -133,10 +145,15 @@ export function ChatWindow({
                           : 'bg-gray-100 text-text'
                       }`}
                     >
-                      <p className="text-sm break-words">{msg.content}</p>
-                      <p className={`text-xs mt-1 ${isOwn ? 'text-white/70' : 'text-text-secondary'}`}>
+                      <p className="text-sm break-words whitespace-pre-wrap">
+                        {msg.content}
+                      </p>
+                      <p
+                        className={`text-xs mt-1 ${
+                          isOwn ? 'text-white/70' : 'text-text-secondary'
+                        }`}
+                      >
                         {formatTime(msg.sentAt)}
-                        {isOwn && msg.readAt && ' ✓✓'}
                       </p>
                     </div>
                   </div>
